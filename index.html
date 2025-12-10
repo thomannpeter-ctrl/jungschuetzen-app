@@ -1,77 +1,41 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jungschützen – Gruppenmeldung</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jungschützen – Gruppenmeldung</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-        background: #f7f7f7;
-    }
-    h1 {
-        color: #222;
-    }
-    .card {
-        background: white;
-        padding: 18px;
-        border-radius: 8px;
-        margin-bottom: 22px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-    .row {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 10px;
-    }
-    input, select {
-        padding: 8px;
-        width: 100%;
-        border: 1px solid #bbb;
-        border-radius: 4px;
-    }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-    }
-    th, td {
-        border: 1px solid #ddd;
-        padding: 8px;
-    }
-    th {
-        background: #eee;
-    }
-</style>
-
+    <style>
+        body { background: #f8f9fa; padding: 20px; }
+        .card { margin-bottom: 25px; }
+        .table thead th { background: #e9ecef; }
+        .result { font-weight: bold; color: #0d6efd; }
+    </style>
 </head>
 <body>
 
-<h1>Jungschützen – Gruppenmeldung</h1>
+<div class="container">
 
-<div class="card">
-    <div class="row">
-        <div style="flex:2">
-            <label>Name Gruppenchef</label>
-            <input type="text" placeholder="Name Vorname">
-        </div>
-        <div style="flex:2">
-            <label>E-Mail</label>
-            <input type="email" placeholder="name@verein.ch">
-        </div>
+    <h1 class="mb-4">Jungschützen – Gruppenmeldung</h1>
+
+    <!-- Grupppenchef -->
+    <div class="card p-3 mb-4">
+        <label class="form-label">Name Gruppenchef</label>
+        <input id="chefName" class="form-control" placeholder="Name Vorname">
+
+        <label class="form-label mt-3">E-Mail</label>
+        <input id="chefMail" class="form-control" placeholder="name@verein.ch">
     </div>
-</div>
 
-<!-- Gruppen-Auswahl -->
-<script>
-function createGroupSelect(groupNumber) {
-    return `
-        <div class="card">
-            <h2>Gruppe ${groupNumber}</h2>
+    <!-- ========================================= -->
+    <!-- Gruppe 1 -->
+    <!-- ========================================= -->
 
-            <table>
+    <div class="card p-3">
+        <h3>Gruppe 1</h3>
+        <table class="table table-bordered">
+            <thead>
                 <tr>
                     <th>Schütze</th>
                     <th>Name</th>
@@ -79,29 +43,142 @@ function createGroupSelect(groupNumber) {
                     <th>Resultat</th>
                     <th>Total</th>
                 </tr>
+            </thead>
+            <tbody id="group1">
+                <!-- rows created by JS -->
+            </tbody>
+        </table>
+    </div>
 
-                ${[1,2,3,4].map(n => `
-                    <tr>
-                        <td>${n}</td>
-                        <td><input></td>
-                        <td><input></td>
-                        <td><input type="number" value="0"></td>
-                        <td>0</td>
-                    </tr>
-                `).join('')}
-            </table>
-        </div>
-    `;
-}
-</script>
+    <!-- ========================================= -->
+    <!-- Gruppe 2 -->
+    <!-- ========================================= -->
 
-<div id="groups"></div>
+    <div class="card p-3">
+        <h3>Gruppe 2</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Schütze</th>
+                    <th>Name</th>
+                    <th>Jahrgang</th>
+                    <th>Resultat</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="group2">
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- Gruppe 3 (optional) -->
+    <!-- ========================================= -->
+
+    <div class="card p-3">
+        <h3>Gruppe 3 (optional)</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Schütze</th>
+                    <th>Name</th>
+                    <th>Jahrgang</th>
+                    <th>Resultat</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="group3">
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- Bild Upload -->
+    <!-- ========================================= -->
+
+    <div class="card p-3 mb-4">
+        <h3>Bild hochladen</h3>
+        <input type="file" accept="image/*" id="imageInput" class="form-control">
+        <img id="preview" style="max-width:300px; margin-top:10px; display:none;">
+    </div>
+
+    <!-- ========================================= -->
+    <!-- Senden -->
+    <!-- ========================================= -->
+
+    <button class="btn btn-primary btn-lg" onclick="sendMail()">📨 Senden</button>
+
+</div>
 
 <script>
-document.getElementById("groups").innerHTML =
-    createGroupSelect(1) +
-    createGroupSelect(2) +
-    createGroupSelect(3);
+function createRows(groupId) {
+    const tbody = document.getElementById(groupId);
+    for (let i = 1; i <= 4; i++) {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td>${i}</td>
+            <td><input class="form-control name"></td>
+            <td><input class="form-control year"></td>
+            <td><input class="form-control result" oninput="updateTotals()"></td>
+            <td class="total result">0</td>
+        `;
+
+        tbody.appendChild(row);
+    }
+}
+
+createRows("group1");
+createRows("group2");
+createRows("group3");
+
+function updateTotals() {
+    document.querySelectorAll("tbody").forEach(tbody => {
+        tbody.querySelectorAll("tr").forEach(row => {
+            const result = row.querySelector(".result").value;
+            row.querySelector(".total").innerText = result ? result : 0;
+        });
+    });
+}
+
+document.getElementById("imageInput").addEventListener("change", function() {
+    const file = this.files[0];
+    if (file) {
+        const img = document.getElementById("preview");
+        img.src = URL.createObjectURL(file);
+        img.style.display = "block";
+    }
+});
+
+function collectGroupData(groupId) {
+    let text = `\n${groupId}:\n`;
+
+    document.querySelectorAll(`#${groupId} tr`).forEach((row, idx) => {
+        let name = row.querySelector(".name").value;
+        let year = row.querySelector(".year").value;
+        let res = row.querySelector(".result").value;
+
+        if (name.trim() !== "" || res.trim() !== "") {
+            text += ` ${idx+1}. ${name} (${year}) – ${res} Punkte\n`;
+        }
+    });
+
+    return text;
+}
+
+function sendMail() {
+    let chef = document.getElementById("chefName").value;
+    let mail = document.getElementById("chefMail").value;
+
+    let body = `Jungschützen-Gruppenmeldung\n\nGruppenchef: ${chef}\nE-Mail: ${mail}\n\n`;
+
+    body += collectGroupData("group1");
+    body += collectGroupData("group2");
+    body += collectGroupData("group3");
+
+    const mailto = `mailto:${mail}?subject=Jungschützen Meldung&body=${encodeURIComponent(body)}`;
+    window.location.href = mailto;
+}
 </script>
 
 </body>
