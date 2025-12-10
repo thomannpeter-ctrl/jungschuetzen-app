@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jungschützen – Gruppenmeldung</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #f7f7f7;
+    }
+    h1 {
+        color: #222;
+    }
+    .card {
+        background: white;
+        padding: 18px;
+        border-radius: 8px;
+        margin-bottom: 22px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    input, select {
+        padding: 8px;
+        width: 100%;
+        border: 1px solid #bbb;
+        border-radius: 4px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+    th {
+        background: #eee;
+    }
+</style>
+
+</head>
+<body>
+
+<h1>Jungschützen – Gruppenmeldung</h1>
+
+<div class="card">
+    <div class="row">
+        <div style="flex:2">
+            <label>Name Gruppenchef</label>
+            <input type="text" placeholder="Name Vorname">
+        </div>
+        <div style="flex:2">
+            <label>E-Mail</label>
+            <input type="email" placeholder="name@verein.ch">
+        </div>
+    </div>
+</div>
+
+<!-- Gruppen-Auswahl -->
+<script>
+function createGroupSelect(groupNumber) {
+    return `
+        <div class="card">
+            <h2>Gruppe ${groupNumber}</h2>
+
+            <table>
+                <tr>
+                    <th>Schütze</th>
+                    <th>Name</th>
+                    <th>Jahrgang</th>
+                    <th>Resultat</th>
+                    <th>Total</th>
+                </tr>
+
+                ${[1,2,3,4].map(n => `
+                    <tr>
+                        <td>${n}</td>
+                        <td><input></td>
+                        <td><input></td>
+                        <td><input type="number" value="0"></td>
+                        <td>0</td>
+                    </tr>
+                `).join('')}
+            </table>
+        </div>
+    `;
+}
+</script>
+
+<div id="groups"></div>
+
+<script>
+document.getElementById("groups").innerHTML =
+    createGroupSelect(1) +
+    createGroupSelect(2) +
+    createGroupSelect(3);
+</script>
+
+</body>
+</html>
