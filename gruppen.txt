@@ -1,1 +1,22 @@
+1 Heim	1	J003	Bowil MS	Linde
+1 Gast	1	J007	Konolfingen SG	Rookies
+1 Gast	1	J021	Worb VSG	Löchli Schützen 1
+2 Heim	1	J020	Trimstein Eichi FS	Apollo
+2 Gast	1	J012	Oberdiessbach SG	Aeschlen Kanadier
+2 Gast	1	J015	Oberthal MS	Top-Gun
+3 Heim	1	J002	Bowil MS	Groggenmoos
+3 Gast	1	J013	Oberthal MS	Bösi Buebe
+3 Gast	1	J009	Linden FS	Blitzschütze
+4 Heim	1	J011	Obediessbach SG	U15
+4 Gast	1	J017	Trimstein Eichi FS	Tagediebe
+4 Gast	1	J004	Bowil MS	Chläberli
+5 Heim	1	J008	Konolfingen SG	Fadegrad
+5 Gast	1	J018	Trimstein Eichi FS	Artemis
+5 Gast	1	J005	Falkenfluh-Schützen	Hunters
+6 Heim	1	J006	Konolfingen SG	Hobbits
+6 Gast	1	J010	Oberdiessbach SG	Bierfront
+6 Gast	1	J019	Trimstein Eichi FS	Ares
+7 Heim	1	J001	Aareschützen Kiesen-Oppligen	Heckeschütze
+7 Gast	1	J016	Schützen Grosshöchstetten	JS Grosshöchstetten
+7 Gast	2	J014	Oberthal MS	Sabrina
 
