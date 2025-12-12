@@ -1,243 +1,58 @@
 <!doctype html>
 <html lang="de">
-
 <head>
-  <meta charset="UTF-8">
-  <title>Jungschützen – Gruppenmeldung</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #eef2f7;
-      padding: 20px;
-    }
-
-    .card {
-      background: #fff;
-      padding: 18px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    input,
-    select {
-      width: 100%;
-      padding: 7px;
-      margin: 3px 0;
-      border: 1px solid #bbb;
-      border-radius: 6px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    th,
-    td {
-      border-bottom: 1px solid #ddd;
-      padding: 6px;
-      text-align: left;
-    }
-
-    th {
-      background: #f3f3f3;
-    }
-
-    h1 {
-      margin-top: 0;
-    }
-
-    .btn {
-      background: #0077dd;
-      color: white;
-      padding: 10px 18px;
-      border-radius: 6px;
-      cursor: pointer;
-      border: none;
-      font-size: 15px;
-    }
-
-    .btn:hover {
-      background: #005ebb;
-    }
-
-    .total {
-      font-weight: bold;
-      color: #0055cc;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Amtscup – Cup-Duell (bis zu drei Gruppen)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,sans-serif;background:#eef2f7;margin:0;color:#111827}
+.container{max-width:1100px;margin:auto;padding:1rem}
+h1{color:#1e3a8a}
+h2{color:#1d4ed8}
+.card{background:#fff;border-radius:12px;padding:1rem 1.25rem;box-shadow:0 4px 10px rgba(15,23,42,.08);margin-bottom:1rem}
+.row{display:flex;flex-wrap:wrap;gap:.75rem}
+.field{flex:1;min-width:180px}
+label{font-size:.8rem;font-weight:600}
+input,select{width:100%;padding:.45rem;border-radius:8px;border:1px solid #cbd5f5}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{border:1px solid #e5e7eb;padding:.35rem;text-align:center}
+th{background:#dbeafe}
+.sum-cell{background:#f3f4f6;font-weight:600}
+.winner-box{padding:.6rem;border-radius:999px;font-weight:600}
+.winner-none{background:#e5e7eb}
+.winner-g1{background:#dcfce7;color:#166534}
+.winner-g2{background:#dbeafe;color:#1d4ed8}
+.winner-g3{background:#fee2e2;color:#b91c1c}
+.winner-draw{background:#fef9c3;color:#854d0e}
+.error{background:#fee2e2;border-color:#dc2626}
+</style>
 </head>
 
 <body>
+<div class="container">
+<h1>Amtscup – Cup-Duell</h1>
 
-  <h1>Jungschützen – Gruppenmeldung</h1>
+<div class="card">
+<h2>1. Gruppenchef & Gruppen</h2>
+<div class="row">
+<div class="field"><label>Name</label><input id="chefName"></div>
+<div class="field"><label>E-Mail</label><input id="chefEmail" type="email"></div>
+</div>
+<div class="row">
+<div class="field"><label>Gruppe 1</label><select id="g1"></select></div>
+<div class="field"><label>Gruppe 2</label><select id="g2"></select></div>
+<div class="field"><label>Gruppe 3 (optional)</label><select id="g3"></select></div>
+</div>
+<button id="toggleG3">➕ 3. Gruppe hinzufügen</button>
+</div>
 
-  <div class="card">
-    <label>Name Gruppenchef</label>
-    <input id="chefName" placeholder="Name Vorname">
+<div id="groups"></div>
 
-    <label>E-Mail</label>
-    <input id="chefEmail" type="email" placeholder="name@verein.ch">
-  </div>
+<div class="card">
+<h2>Vergleich & Sieger</h2>
+<div id="winner" class="winner-box winner-none">Noch keine Resultate</div>
+</div>
+</div>
 
-  <!-- ---------------------------------------------------- -->
-  <!--                   GRUPPEN BEREICH                    -->
-  <!-- ---------------------------------------------------- -->
-
-  <script>
-    function createGroupTable(groupId) {
-      let html = `
-        <div class="card">
-          <h2>Gruppe ${groupId}</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Schütze</th>
-                <th>Name</th>
-                <th>Jahrgang</th>
-                <th>Resultat</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody id="group${groupId}">
-      `;
-
-      for (let i = 1; i <= 4; i++) {
-        html += `
-          <tr>
-            <td>${i}</td>
-            <td><input class="name"></td>
-            <td><input class="year"></td>
-            <td><input class="result" type="number" oninput="updateTotals()"></td>
-            <td class="total">0</td>
-          </tr>
-        `;
-      }
-
-      html += `
-            </tbody>
-          </table>
-        </div>
-      `;
-      return html;
-    }
-  </script>
-
-  <div id="groups"></div>
-
-  <script>
-    document.getElementById("groups").innerHTML =
-      createGroupTable(1) +
-      createGroupTable(2) +
-      createGroupTable(3);
-  </script>
-
-  <!-- ---------------------------------------------------- -->
-  <!--              TOTALS BERECHNUNG                       -->
-  <!-- ---------------------------------------------------- -->
-
-  <script>
-    function updateTotals() {
-      for (let g = 1; g <= 3; g++) {
-        let rows = document.querySelectorAll(`#group${g} tr`);
-        let groupTotal = 0;
-
-        rows.forEach(row => {
-          let res = parseInt(row.querySelector(".result").value) || 0;
-          row.querySelector(".total").textContent = res;
-          groupTotal += res;
-        });
-
-        document.getElementById(`sumG${g}`).textContent = groupTotal;
-      }
-    }
-
-    function getGroupSum(g) {
-      return parseInt(document.getElementById(`sumG${g}`).textContent);
-    }
-  </script>
-
-  <!-- ---------------------------------------------------- -->
-  <!--                 TOTAL ANZEIGE                        -->
-  <!-- ---------------------------------------------------- -->
-
-  <div class="card">
-    <h2>Vergleich – Gruppen Total</h2>
-
-    <table>
-      <tr>
-        <th>Gruppe</th>
-        <th>Total</th>
-      </tr>
-      <tr>
-        <td>Gruppe 1</td>
-        <td id="sumG1" class="total">0</td>
-      </tr>
-      <tr>
-        <td>Gruppe 2</td>
-        <td id="sumG2" class="total">0</td>
-      </tr>
-      <tr>
-        <td>Gruppe 3</td>
-        <td id="sumG3" class="total">0</td>
-      </tr>
-    </table>
-  </div>
-
-  <!-- ---------------------------------------------------- -->
-  <!--                 GRUPPEN VERGLEICH                    -->
-  <!-- ---------------------------------------------------- -->
-
-  <div class="card">
-    <h2>Gruppen vergleichen</h2>
-
-    <label>Vergleich auswählen:</label>
-    <select id="compareSelect" onchange="compareGroups()">
-      <option value="">Bitte wählen…</option>
-      <option value="1-2">Gruppe 1 vs Gruppe 2</option>
-      <option value="1-3">Gruppe 1 vs Gruppe 3</option>
-      <option value="2-3">Gruppe 2 vs Gruppe 3</option>
-    </select>
-
-    <h3 id="compareResult" style="margin-top: 15px;"></h3>
-  </div>
-
-  <script>
-    function compareGroups() {
-      let sel = document.getElementById("compareSelect").value;
-      let out = document.getElementById("compareResult");
-
-      if (!sel) {
-        out.innerHTML = "";
-        return;
-      }
-
-      let [A, B] = sel.split("-").map(Number);
-      let totalA = getGroupSum(A);
-      let totalB = getGroupSum(B);
-
-      if (totalA > totalB) {
-        out.innerHTML = `🏆 Sieger: <b>Gruppe ${A}</b> mit ${totalA} Punkten (Gruppe ${B}: ${totalB})`;
-      } else if (totalB > totalA) {
-        out.innerHTML = `🏆 Sieger: <b>Gruppe ${B}</b> mit ${totalB} Punkten (Gruppe ${A}: ${totalA})`;
-      } else {
-        out.innerHTML = `⚖ <b>Unentschieden</b> – beide Gruppen haben ${totalA} Punkte`;
-      }
-    }
-  </script>
-
-  <!-- ---------------------------------------------------- -->
-  <!--                  SENDEN / ABSCHLUSS                  -->
-  <!-- ---------------------------------------------------- -->
-
-  <div class="card">
-    <button class="btn">Senden</button>
-    <p style="color: #666; margin-top: 10px;">(Senden-Funktion kann ich dir einbauen – sag mir Bescheid)</p>
-  </div>
-
-</body>
-</html>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dis
