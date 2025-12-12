@@ -55,4 +55,86 @@ th{background:#dbeafe}
 </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dis
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const RESULT_EMAIL="thomannpeter@bluewin.ch";
+let g3=false;
+
+function parseGroups(t){
+return t.split(/\r?\n/).map(l=>l.trim()).filter(l=>l && !l.startsWith("#"));
+}
+
+async function loadGroups(){
+const r=await fetch("gruppen.txt?ts="+Date.now(),{cache:"no-store"});
+const g=parseGroups(await r.text());
+["g1","g2","g3"].forEach(id=>{
+const s=document.getElementById(id);
+s.innerHTML="<option value=''>Bitte wählen …</option>";
+g.forEach(x=>{const o=document.createElement("option");o.value=o.textContent=x;s.appendChild(o);});
+});
+}
+
+function createGroup(n){
+const c=document.createElement("div");
+c.className="card";
+c.innerHTML=`<h2>Schützen – Gruppe ${n}</h2>
+<table><thead><tr>
+<th>Schütze</th><th>Name*</th><th>Jahrgang*</th><th>Resultat*</th><th>Total</th>
+</tr></thead><tbody></tbody>
+<tfoot><tr><th colspan="3">Summe</th><th id="sr${n}" class="sum-cell"></th><th id="st${n}" class="sum-cell"></th></tr></tfoot></table>`;
+const tb=c.querySelector("tbody");
+for(let i=1;i<=4;i++){
+tb.innerHTML+=`<tr>
+<td>${i}</td>
+<td><input></td>
+<td><input type="number"></td>
+<td><input type="number" class="res"></td>
+<td class="tot"></td>
+</tr>`;
+}
+tb.querySelectorAll(".res").forEach(i=>i.oninput=()=>calc(n));
+document.getElementById("groups").appendChild(c);
+}
+
+function calc(n){
+let s=0;
+document.querySelectorAll(`#groups .card:nth-child(${n}) .res`).forEach(i=>{
+const v=parseInt(i.value)||0;
+i.parentElement.querySelector(".tot").textContent=v||"";
+s+=v;
+});
+document.getElementById("sr"+n).textContent=s||"";
+document.getElementById("st"+n).textContent=s||"";
+updateWinner();
+}
+
+function updateWinner(){
+const t=[
+{n:1,v:+sr1.textContent||0},
+{n:2,v:+sr2.textContent||0},
+...(g3?[{n:3,v:+sr3.textContent||0}]:[])
+].filter(x=>x.v>0);
+const b=document.getElementById("winner");
+if(!t.length){b.textContent="Noch keine Resultate";b.className="winner-box winner-none";return;}
+t.sort((a,b)=>b.v-a.v);
+const top=t[0];
+const tied=t.filter(x=>x.v===top.v);
+if(tied.length>1){
+b.textContent="🤝 Unentschieden";b.className="winner-box winner-draw";
+}else{
+b.textContent="🏆 Sieger Gruppe "+top.n+" (Total "+top.v+")";
+b.className="winner-box winner-g"+top.n;
+}
+}
+
+document.getElementById("toggleG3").onclick=()=>{
+if(!g3){g3=true;createGroup(3);document.getElementById("toggleG3").textContent="3. Gruppe entfernen";}
+else{location.reload();}
+};
+
+loadGroups();
+createGroup(1);
+createGroup(2);
+</script>
+</body>
+</html>
