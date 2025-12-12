@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Amtscup Jungschützen – Pistole</title>
+<title>Amtscup Jungschützen – Cup-Duell</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -10,19 +10,19 @@
 body{font-family:system-ui,sans-serif;background:#eef2f7;margin:0;color:#111827}
 .container{max-width:1100px;margin:auto;padding:1rem}
 h1{color:#1e3a8a}
-h2{color:#1d4ed8}
+h2{color:#1d4ed8;margin-top:0}
 .card{background:#fff;border-radius:12px;padding:1rem 1.25rem;box-shadow:0 4px 10px rgba(15,23,42,.08);margin-bottom:1rem}
-.row{display:flex;flex-wrap:wrap;gap:.75rem}
+.row{display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:.5rem}
 .field{flex:1;min-width:180px}
 label{font-size:.8rem;font-weight:600}
 input,select{width:100%;padding:.45rem;border-radius:8px;border:1px solid #cbd5f5}
 table{width:100%;border-collapse:collapse;font-size:.85rem}
 th,td{border:1px solid #e5e7eb;padding:.35rem;text-align:center}
 th{background:#dbeafe}
-.sum-cell{background:#f3f4f6;font-weight:600}
-button{border:none;border-radius:999px;padding:.5rem 1rem;cursor:pointer}
-.btn{background:#2563eb;color:#fff}
-.winner-box{padding:.6rem;border-radius:999px;font-weight:600}
+.sum-cell{background:#f3f4f6;font-weight:700}
+button{border:none;border-radius:999px;padding:.6rem 1rem;font-size:.9rem;cursor:pointer}
+.btn-primary{background:#2563eb;color:#fff}
+.winner-box{padding:.6rem;border-radius:999px;font-weight:700}
 .winner-none{background:#e5e7eb}
 .winner-g1{background:#dcfce7;color:#166534}
 .winner-g2{background:#dbeafe;color:#1d4ed8}
@@ -33,13 +33,14 @@ button{border:none;border-radius:999px;padding:.5rem 1rem;cursor:pointer}
 <body>
 <div class="container">
 
-<h1>Amtscup Jungschützen – Pistole</h1>
+<h1>Amtscup Jungschützen – Cup-Duell</h1>
 
+<!-- 1. Gruppen -->
 <div class="card">
 <h2>1. Gruppenchef & Gruppen</h2>
 <div class="row">
   <div class="field">
-    <label>Name Gruppenchef</label>
+    <label>Name</label>
     <input id="chef">
   </div>
   <div class="field">
@@ -60,29 +61,36 @@ button{border:none;border-radius:999px;padding:.5rem 1rem;cursor:pointer}
 </div>
 </div>
 
+<!-- Gruppen -->
 <div id="groups"></div>
 
+<!-- Sieger -->
 <div class="card">
 <h2>Vergleich & Sieger</h2>
 <div id="winner" class="winner-box winner-none">Noch keine Resultate</div>
 </div>
 
+<!-- Senden -->
 <div class="card">
-<button class="btn" onclick="send()">📤 Resultat speichern</button>
+<button class="btn-primary" onclick="send()">📤 Resultat speichern</button>
 </div>
 
 </div>
 
 <script>
+/* ===================== KONFIG ===================== */
 const SCRIPT_URL =
 "https://script.google.com/macros/s/AKfycbzdbePK-rK_4lyEQiyqw51Vi2n0gUPR-llwRs5ozs1FGGj3E-xzo9jwS7pbLrCwbfOUzg/exec";
 
+/* ===================== GRUPPEN LADEN ===================== */
 function parseGroups(t){
-  return t.split(/\r?\n/).map(l=>l.trim()).filter(l=>l && !l.startsWith("#"));
+  return t.split(/\r?\n/)
+          .map(l=>l.trim())
+          .filter(l=>l && !l.startsWith("#"));
 }
 
 async function loadGroups(){
-  const r = await fetch("gruppen.txt?ts="+Date.now());
+  const r = await fetch("gruppen.txt?ts=" + Date.now(), { cache:"no-store" });
   const g = parseGroups(await r.text());
   ["g1","g2"].forEach(id=>{
     const s=document.getElementById(id);
@@ -95,93 +103,110 @@ async function loadGroups(){
   });
 }
 
+/* ===================== GRUPPEN TABELLE ===================== */
 function createGroup(n){
   const c=document.createElement("div");
   c.className="card";
+  c.id="group"+n;
   c.innerHTML=`
-  <h2>Schützen – Gruppe ${n}</h2>
-  <table>
-  <thead>
-    <tr><th>#</th><th>Name*</th><th>Jahrgang*</th><th>Resultat*</th><th>Total</th></tr>
-  </thead>
-  <tbody></tbody>
-  <tfoot>
-    <tr><th colspan="3">Summe</th>
-    <th id="sum${n}" class="sum-cell"></th>
-    <th id="tot${n}" class="sum-cell"></th></tr>
-  </tfoot>
-  </table>`;
+    <h2>Schützen – Gruppe ${n}</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name*</th>
+          <th>Jahrgang*</th>
+          <th>Resultat*</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr>
+          <th colspan="3">Summe Gruppe ${n}</th>
+          <th id="sum${n}" class="sum-cell">0</th>
+        </tr>
+      </tfoot>
+    </table>
+  `;
+
   const tb=c.querySelector("tbody");
   for(let i=1;i<=4;i++){
     tb.innerHTML+=`
-    <tr>
-      <td>${i}</td>
-      <td><input></td>
-      <td><input type="number"></td>
-      <td><input type="number" class="res"></td>
-      <td class="tot"></td>
-    </tr>`;
+      <tr>
+        <td>${i}</td>
+        <td><input></td>
+        <td><input type="number"></td>
+        <td><input type="number" class="res"></td>
+      </tr>`;
   }
+
   tb.querySelectorAll(".res").forEach(i=>i.oninput=()=>calc(n));
   document.getElementById("groups").appendChild(c);
 }
 
+/* ===================== BERECHNUNG ===================== */
 function calc(n){
-  let s=0;
-  document.querySelectorAll(`#groups .card:nth-child(${n}) .res`).forEach(i=>{
-    const v=parseInt(i.value)||0;
-    i.parentElement.querySelector(".tot").textContent=v||"";
-    s+=v;
+  let sum=0;
+  document.querySelectorAll(`#group${n} .res`).forEach(i=>{
+    sum += parseInt(i.value) || 0;
   });
-  document.getElementById("sum"+n).textContent=s||"";
-  document.getElementById("tot"+n).textContent=s||"";
+  document.getElementById("sum"+n).textContent = sum;
   updateWinner();
 }
 
 function updateWinner(){
-  const a=[
-    {n:1,v:+sum1.textContent||0},
-    {n:2,v:+sum2.textContent||0}
+  const t=[
+    {n:1,v:+document.getElementById("sum1").textContent||0},
+    {n:2,v:+document.getElementById("sum2").textContent||0}
   ].filter(x=>x.v>0);
-  const w=document.getElementById("winner");
-  if(!a.length){
-    w.textContent="Noch keine Resultate";
-    w.className="winner-box winner-none";
+
+  const b=document.getElementById("winner");
+  if(!t.length){
+    b.textContent="Noch keine Resultate";
+    b.className="winner-box winner-none";
     return;
   }
-  a.sort((a,b)=>b.v-a.v);
-  if(a[1] && a[0].v===a[1].v){
-    w.textContent="🤝 Unentschieden";
-    w.className="winner-box winner-draw";
+
+  t.sort((a,b)=>b.v-a.v);
+  if(t[1] && t[0].v===t[1].v){
+    b.textContent="🤝 Unentschieden ("+t[0].v+")";
+    b.className="winner-box winner-draw";
   }else{
-    w.textContent=`🏆 Sieger: Gruppe ${a[0].n} (Total ${a[0].v})`;
-    w.className="winner-box winner-g"+a[0].n;
+    b.textContent="🏆 Sieger: Gruppe "+t[0].n+" (Total "+t[0].v+")";
+    b.className="winner-box winner-g"+t[0].n;
   }
 }
 
+/* ===================== SENDEN ===================== */
 async function send(){
   const data={
     chef: chef.value,
     email: email.value,
     gruppe1: g1.value,
     gruppe2: g2.value,
-    total1: +sum1.textContent||0,
-    total2: +sum2.textContent||0
+    total1: +document.getElementById("sum1").textContent||0,
+    total2: +document.getElementById("sum2").textContent||0
   };
 
   const r = await fetch(SCRIPT_URL,{
     method:"POST",
-    headers:{"Content-Type":"application/json"},
+    headers:{ "Content-Type":"application/json" },
     body:JSON.stringify(data)
   });
 
-  if(r.ok) alert("✅ Resultat erfolgreich gespeichert");
-  else alert("❌ Senden fehlgeschlagen");
+  const res = await r.json();
+  if(res.status==="ok"){
+    alert("✅ Resultat erfolgreich gespeichert");
+  }else{
+    alert("❌ Fehler: "+res.message);
+  }
 }
 
+/* ===================== START ===================== */
 loadGroups();
 createGroup(1);
 createGroup(2);
 </script>
+
 </body>
 </html>
