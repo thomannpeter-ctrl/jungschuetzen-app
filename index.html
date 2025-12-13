@@ -10,8 +10,9 @@
 body{font-family:system-ui,sans-serif;background:#eef2f7;margin:0;color:#111827}
 .container{max-width:1100px;margin:auto;padding:1rem}
 h1{color:#1e3a8a}
-h2{color:#1d4ed8;margin-top:0}
-.card{background:#fff;border-radius:12px;padding:1rem 1.25rem;box-shadow:0 4px 10px rgba(15,23,42,.08);margin-bottom:1rem}
+h2{color:#1d4ed8;margin:0}
+.card{background:#fff;border-radius:12px;padding:1rem 1.25rem;
+box-shadow:0 4px 10px rgba(15,23,42,.08);margin-bottom:1rem}
 .row{display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:.5rem}
 .field{flex:1;min-width:180px}
 label{font-size:.8rem;font-weight:600}
@@ -20,7 +21,13 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}
 th,td{border:1px solid #e5e7eb;padding:.35rem;text-align:center}
 th{background:#dbeafe}
 .sum-cell{background:#f3f4f6;font-weight:700}
-button{border:none;border-radius:999px;padding:.6rem 1rem;font-size:.9rem;cursor:pointer}
+.group-title{
+  font-weight:700;
+  margin:.5rem 0;
+  color:#0f172a;
+}
+button{border:none;border-radius:999px;padding:.6rem 1rem;
+font-size:.9rem;cursor:pointer}
 .btn-primary{background:#2563eb;color:#fff}
 .winner-box{padding:.6rem;border-radius:999px;font-weight:700}
 .winner-none{background:#e5e7eb}
@@ -38,6 +45,7 @@ button{border:none;border-radius:999px;padding:.6rem 1rem;font-size:.9rem;cursor
 <!-- 1. Gruppen -->
 <div class="card">
 <h2>1. Gruppenchef & Gruppen</h2>
+
 <div class="row">
   <div class="field">
     <label>Name</label>
@@ -85,13 +93,14 @@ const SCRIPT_URL =
 /* ===================== GRUPPEN LADEN ===================== */
 function parseGroups(t){
   return t.split(/\r?\n/)
-          .map(l=>l.trim())
-          .filter(l=>l && !l.startsWith("#"));
+    .map(l=>l.trim())
+    .filter(l=>l && !l.startsWith("#"));
 }
 
 async function loadGroups(){
   const r = await fetch("gruppen.txt?ts=" + Date.now(), { cache:"no-store" });
   const g = parseGroups(await r.text());
+
   ["g1","g2"].forEach(id=>{
     const s=document.getElementById(id);
     s.innerHTML="<option value=''>Bitte wählen …</option>";
@@ -108,8 +117,11 @@ function createGroup(n){
   const c=document.createElement("div");
   c.className="card";
   c.id="group"+n;
+
   c.innerHTML=`
     <h2>Schützen – Gruppe ${n}</h2>
+    <div id="title${n}" class="group-title">–</div>
+
     <table>
       <thead>
         <tr>
@@ -144,6 +156,15 @@ function createGroup(n){
   document.getElementById("groups").appendChild(c);
 }
 
+/* ===================== TITEL AKTUALISIEREN ===================== */
+function updateGroupTitles(){
+  document.getElementById("title1").textContent =
+    g1.value || "–";
+
+  document.getElementById("title2").textContent =
+    g2.value || "–";
+}
+
 /* ===================== BERECHNUNG ===================== */
 function calc(n){
   let sum=0;
@@ -156,8 +177,8 @@ function calc(n){
 
 function updateWinner(){
   const t=[
-    {n:1,v:+document.getElementById("sum1").textContent||0},
-    {n:2,v:+document.getElementById("sum2").textContent||0}
+    {n:1,v:+sum1.textContent||0},
+    {n:2,v:+sum2.textContent||0}
   ].filter(x=>x.v>0);
 
   const b=document.getElementById("winner");
@@ -184,8 +205,8 @@ async function send(){
     email: email.value,
     gruppe1: g1.value,
     gruppe2: g2.value,
-    total1: +document.getElementById("sum1").textContent||0,
-    total2: +document.getElementById("sum2").textContent||0
+    total1: +sum1.textContent||0,
+    total2: +sum2.textContent||0
   };
 
   const r = await fetch(SCRIPT_URL,{
@@ -195,17 +216,18 @@ async function send(){
   });
 
   const res = await r.json();
-  if(res.status==="ok"){
-    alert("✅ Resultat erfolgreich gespeichert");
-  }else{
-    alert("❌ Fehler: "+res.message);
-  }
+  alert(res.status==="ok"
+    ? "✅ Resultat erfolgreich gespeichert"
+    : "❌ Fehler: "+res.message);
 }
 
 /* ===================== START ===================== */
 loadGroups();
 createGroup(1);
 createGroup(2);
+
+g1.addEventListener("change", updateGroupTitles);
+g2.addEventListener("change", updateGroupTitles);
 </script>
 
 </body>
