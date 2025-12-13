@@ -10,189 +10,181 @@
 body{font-family:system-ui,sans-serif;background:#eef2f7;margin:0;color:#111827}
 .container{max-width:1100px;margin:auto;padding:1rem}
 h1{color:#1e3a8a}
-h2{color:#1d4ed8;margin:0 0 .5rem 0}
-.card{background:#fff;border-radius:12px;padding:1rem 1.25rem;
-box-shadow:0 4px 10px rgba(15,23,42,.08);margin-bottom:1rem}
-.row{display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:.5rem}
-.field{flex:1;min-width:200px}
+h2{color:#1d4ed8;margin:0 0 .5rem}
+.card{background:#fff;border-radius:14px;padding:1rem 1.25rem;box-shadow:0 4px 10px rgba(15,23,42,.08);margin-bottom:1rem}
+.row{display:flex;flex-wrap:wrap;gap:.75rem}
+.field{flex:1;min-width:180px}
 label{font-size:.8rem;font-weight:600}
-input,select{width:100%;padding:.45rem;border-radius:8px;border:1px solid #cbd5f5}
+input,select{width:100%;padding:.5rem;border-radius:8px;border:1px solid #cbd5f5}
+
 table{width:100%;border-collapse:collapse;font-size:.85rem}
-th,td{border:1px solid #e5e7eb;padding:.35rem;text-align:center}
+th,td{border:1px solid #e5e7eb;padding:.4rem;text-align:center}
 th{background:#dbeafe}
 .sum{background:#f3f4f6;font-weight:700}
-button{border:none;border-radius:999px;padding:.6rem 1rem;
-font-size:.9rem;cursor:pointer}
-.btn-primary{background:#2563eb;color:#fff}
-.winner{padding:.6rem;border-radius:999px;font-weight:700}
-.w-none{background:#e5e7eb}
-.w-g1{background:#dcfce7;color:#166534}
-.w-g2{background:#dbeafe;color:#1d4ed8}
-.w-g3{background:#fee2e2;color:#991b1b}
-.w-draw{background:#fef9c3;color:#854d0e}
+
+button{
+  border:none;
+  border-radius:999px;
+  padding:.8rem 1.2rem;
+  font-size:1rem;
+  cursor:pointer;
+  background:#2563eb;
+  color:white;
+  width:100%;
+}
+
+@media(max-width:768px){
+  .row{flex-direction:column}
+  table{display:block;overflow-x:auto;white-space:nowrap}
+}
 </style>
 </head>
 
 <body>
 <div class="container">
+
 <h1>Amtscup Jungschützen – Cup-Duell</h1>
 
 <!-- Gruppenchef -->
 <div class="card">
-<h2>1. Gruppenchef & Gruppen</h2>
+<h2>1. Gruppenchef</h2>
 <div class="row">
-  <div class="field"><label>Name</label><input id="chef"></div>
-  <div class="field"><label>E-Mail</label><input id="email" type="email"></div>
+  <div class="field">
+    <label>Name</label>
+    <input id="chef">
+  </div>
+  <div class="field">
+    <label>E-Mail</label>
+    <input id="email" type="email">
+  </div>
+</div>
 </div>
 
+<!-- Gruppenwahl -->
+<div class="card">
+<h2>2. Gruppenwahl</h2>
 <div class="row">
-  <div class="field"><label>Gruppe 1</label><select id="g1"></select></div>
-</div>
-<div class="row">
-  <div class="field"><label>Gruppe 2 (optional)</label><select id="g2"></select></div>
-</div>
-<div class="row">
-  <div class="field"><label>Gruppe 3 (optional)</label><select id="g3"></select></div>
+  <div class="field">
+    <label>Gruppe 1 *</label>
+    <select id="g1" onchange="updateTitles()"></select>
+  </div>
+  <div class="field">
+    <label>Gruppe 2 (optional)</label>
+    <select id="g2" onchange="updateTitles()"></select>
+  </div>
+  <div class="field">
+    <label>Gruppe 3 (optional)</label>
+    <select id="g3" onchange="updateTitles()"></select>
+  </div>
 </div>
 </div>
 
 <div id="groups"></div>
 
 <div class="card">
-<h2>Vergleich & Sieger</h2>
-<div id="winner" class="winner w-none">Noch keine Resultate</div>
+<button onclick="sendMail()">📧 Resultat senden</button>
 </div>
 
-<div class="card">
-<button class="btn-primary" onclick="sendMail()">📧 Resultat senden</button>
-</div>
 </div>
 
 <script>
-const RESULT_EMAIL="thomannpeter@bluewin.ch";
-
-/* Gruppen laden */
+/* ===== Gruppen aus gruppen.txt ===== */
 async function loadGroups(){
   const r=await fetch("gruppen.txt?ts="+Date.now(),{cache:"no-store"});
-  const g=(await r.text()).split(/\r?\n/)
-    .map(l=>l.trim()).filter(l=>l && !l.startsWith("#"));
+  const g=r.ok?(await r.text()).split(/\r?\n/).filter(x=>x.trim()):[];
   ["g1","g2","g3"].forEach(id=>{
     const s=document.getElementById(id);
     s.innerHTML="<option value=''>Bitte wählen …</option>";
     g.forEach(x=>{
       const o=document.createElement("option");
-      o.value=o.textContent=x;
+      o.value=o.textContent=x.trim();
       s.appendChild(o);
     });
   });
 }
 
-/* Gruppe erstellen */
+/* ===== Tabellen ===== */
 function createGroup(n){
   const c=document.createElement("div");
   c.className="card";
   c.id="group"+n;
   c.innerHTML=`
-  <h2>Schützen – Gruppe ${n}: <span id="label${n}"></span></h2>
-  <table>
-    <thead><tr>
-      <th>#</th><th>Name*</th><th>Jahrgang*</th><th>Resultat*</th>
-    </tr></thead>
-    <tbody></tbody>
-    <tfoot>
-      <tr><th colspan="3">Summe Gruppe ${n}</th>
-      <th id="sum${n}" class="sum">0</th></tr>
-    </tfoot>
-  </table>`;
+    <h2 id="title${n}">Schützen – Gruppe ${n}</h2>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Name</th><th>Jahrgang</th><th>Resultat</th></tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr><th colspan="3">Summe Gruppe ${n}</th><th id="sum${n}" class="sum">0</th></tr>
+      </tfoot>
+    </table>`;
   const tb=c.querySelector("tbody");
   for(let i=1;i<=4;i++){
     tb.innerHTML+=`
-    <tr>
-      <td>${i}</td>
-      <td><input></td>
-      <td><input type="number"></td>
-      <td><input type="number" class="res"></td>
-    </tr>`;
+      <tr>
+        <td>${i}</td>
+        <td><input></td>
+        <td><input type="number"></td>
+        <td><input type="number" class="r" oninput="calc(${n})"></td>
+      </tr>`;
   }
-  tb.querySelectorAll(".res").forEach(i=>i.oninput=()=>calc());
   document.getElementById("groups").appendChild(c);
 }
 
-/* Berechnung */
-function calc(){
-  [1,2,3].forEach(n=>{
-    let s=0;
-    document.querySelectorAll(`#group${n} .res`).forEach(i=>{
-      s+=parseInt(i.value)||0;
-    });
-    const el=document.getElementById("sum"+n);
-    if(el) el.textContent=s;
-  });
-  updateWinner();
+function calc(n){
+  let s=0;
+  document.querySelectorAll(`#group${n} .r`).forEach(i=>s+=+i.value||0);
+  document.getElementById("sum"+n).textContent=s;
 }
 
-function updateWinner(){
-  const arr=[];
+function updateTitles(){
   [1,2,3].forEach(n=>{
-    const v=+document.getElementById("sum"+n)?.textContent||0;
-    const name=document.getElementById("g"+n).value;
-    if(name && v>0) arr.push({n,v,name});
+    const v=document.getElementById("g"+n).value;
+    document.getElementById("title"+n).textContent=
+      v ? `Schützen – Gruppe ${n}: ${v}` : `Schützen – Gruppe ${n}`;
   });
-
-  const w=document.getElementById("winner");
-  if(!arr.length){
-    w.textContent="Noch keine Resultate";
-    w.className="winner w-none"; return;
-  }
-
-  arr.sort((a,b)=>b.v-a.v);
-  if(arr[1] && arr[0].v===arr[1].v){
-    w.textContent="🤝 Unentschieden ("+arr[0].v+")";
-    w.className="winner w-draw";
-  }else{
-    w.textContent="🏆 Sieger: "+arr[0].name+" (Total "+arr[0].v+")";
-    w.className="winner w-g"+arr[0].n;
-  }
 }
 
-/* Mail */
+/* ===== MAIL ===== */
 function sendMail(){
-  if(!g1.value){alert("Mindestens Gruppe 1 wählen");return;}
+  if(!g1.value){
+    alert("Mindestens Gruppe 1 auswählen");
+    return;
+  }
 
-  let body=`Amtscup Jungschützen – Resultatmeldung\n\n`;
-  body+=`Gruppenchef: ${chef.value}\nE-Mail: ${email.value}\n\n`;
+  let body="";
+  body+="AMTSCUP JUNGSCHÜTZEN – RESULTAT\n";
+  body+="================================\n\n";
+  body+="GRUPPENCHEF\n";
+  body+="Name;E-Mail\n";
+  body+=`${chef.value||"-"};${email.value||"-"}\n\n`;
 
   [1,2,3].forEach(n=>{
     const g=document.getElementById("g"+n).value;
     if(!g) return;
-    body+=`Gruppe ${n}: ${g}\n`;
-    body+=`Name;Jahrgang;Resultat\n`;
+
+    body+=`GRUPPE ${n};${g}\n`;
+    body+="Name;Jahrgang;Resultat\n";
     document.querySelectorAll(`#group${n} tbody tr`).forEach(tr=>{
-      const t=[...tr.querySelectorAll("input")].map(i=>i.value||"-");
-      if(t.join("")!=="--") body+=t.join(";")+"\n";
+      const v=[...tr.querySelectorAll("input")].map(i=>i.value.trim());
+      if(v.join("")) body+=`${v[0]||"-"};${v[1]||"-"};${v[2]||"0"}\n`;
     });
-    body+=`Summe Gruppe ${n}: ${document.getElementById("sum"+n).textContent}\n\n`;
+    body+=`SUMME;;${document.getElementById("sum"+n).textContent}\n\n`;
   });
 
-  body+=`---\nBitte bei Bedarf CC an sich selbst setzen.`;
   location.href=
-  `mailto:${RESULT_EMAIL}?subject=`+
-  encodeURIComponent("Amtscup Jungschützen Resultat")+
-  `&body=`+encodeURIComponent(body);
+    "mailto:thomannpeter@bluewin.ch"+
+    "?subject="+encodeURIComponent("Amtscup Jungschützen – Resultat")+
+    "&body="+encodeURIComponent(body);
 }
 
-/* Init */
+/* START */
 loadGroups();
 createGroup(1);
 createGroup(2);
 createGroup(3);
-
-["g1","g2","g3"].forEach((id,i)=>{
-  document.getElementById(id).onchange=()=>{
-    document.getElementById("label"+(i+1)).textContent=
-    document.getElementById(id).value;
-  };
-});
 </script>
+
 </body>
 </html>
