@@ -11,8 +11,7 @@ body{font-family:system-ui,sans-serif;background:#eef2f7;margin:0;color:#111827}
 .container{max-width:1100px;margin:auto;padding:1rem}
 h1{color:#1e3a8a}
 h2{color:#1d4ed8;margin:0}
-.card{background:#fff;border-radius:12px;padding:1rem 1.25rem;
-box-shadow:0 4px 10px rgba(15,23,42,.08);margin-bottom:1rem}
+.card{background:#fff;border-radius:12px;padding:1rem 1.25rem;box-shadow:0 4px 10px rgba(15,23,42,.08);margin-bottom:1rem}
 .row{display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:.5rem}
 .field{flex:1;min-width:180px}
 label{font-size:.8rem;font-weight:600}
@@ -31,6 +30,8 @@ button{border:none;border-radius:999px;padding:.6rem 1rem;font-size:.9rem;cursor
 .winner-g2{background:#dbeafe;color:#1d4ed8}
 .winner-g3{background:#fee2e2;color:#991b1b}
 .winner-draw{background:#fef9c3;color:#854d0e}
+.small-note{font-size:.8rem;color:#6b7280;margin-top:.25rem}
+.error{border-color:#dc2626 !important;background:#fee2e2 !important}
 </style>
 </head>
 
@@ -41,35 +42,41 @@ button{border:none;border-radius:999px;padding:.6rem 1rem;font-size:.9rem;cursor
 
 <!-- 1. Gruppen -->
 <div class="card">
-<h2>1. Gruppenchef & Gruppen</h2>
+  <h2>1. Gruppenchef & Gruppen</h2>
 
-<div class="row">
-  <div class="field">
-    <label>Name</label>
-    <input id="chef">
+  <div class="row">
+    <div class="field">
+      <label>Name</label>
+      <input id="chef" placeholder="Name Vorname">
+    </div>
+    <div class="field">
+      <label>E-Mail</label>
+      <input id="email" type="email" placeholder="name@verein.ch">
+    </div>
   </div>
-  <div class="field">
-    <label>E-Mail</label>
-    <input id="email" type="email">
-  </div>
-</div>
 
-<div class="row">
-  <div class="field">
-    <label>Gruppe 1</label>
-    <select id="g1"></select>
+  <!-- Gruppenauswahl: UNTEREINANDER -->
+  <div class="row">
+    <div class="field">
+      <label>Gruppe 1</label>
+      <select id="g1"></select>
+    </div>
   </div>
-  <div class="field">
-    <label>Gruppe 2</label>
-    <select id="g2"></select>
+  <div class="row">
+    <div class="field">
+      <label>Gruppe 2</label>
+      <select id="g2"></select>
+    </div>
   </div>
-  <div class="field" id="g3Row" style="display:none">
-    <label>Gruppe 3 (optional)</label>
-    <select id="g3"></select>
+  <div class="row" id="g3Row" style="display:none">
+    <div class="field">
+      <label>Gruppe 3 (optional)</label>
+      <select id="g3"></select>
+    </div>
   </div>
-</div>
 
-<button class="btn-secondary" id="toggleG3">➕ 3. Gruppe hinzufügen</button>
+  <button class="btn-secondary" id="toggleG3" type="button">➕ 3. Gruppe hinzufügen</button>
+  <div class="small-note">Gruppen werden aus <code>gruppen.txt</code> geladen.</div>
 </div>
 
 <!-- Gruppen -->
@@ -77,13 +84,17 @@ button{border:none;border-radius:999px;padding:.6rem 1rem;font-size:.9rem;cursor
 
 <!-- Sieger -->
 <div class="card">
-<h2>Vergleich & Sieger</h2>
-<div id="winner" class="winner-box winner-none">Noch keine Resultate</div>
+  <h2>Vergleich & Sieger</h2>
+  <div id="winner" class="winner-box winner-none">Noch keine Resultate</div>
 </div>
 
-<!-- Senden -->
+<!-- Speichern -->
 <div class="card">
-<button class="btn-primary" onclick="send()">📤 Resultat speichern</button>
+  <button class="btn-primary" type="button" onclick="saveAll()">📤 Speichern (Google-Tabelle + E-Mail)</button>
+  <div class="small-note">
+    Speichert zuerst in Google Sheets. Danach wird dein Mailprogramm mit einer fertigen Mail an
+    <strong>thomannpeter@bluewin.ch</strong> geöffnet.
+  </div>
 </div>
 
 </div>
@@ -92,6 +103,8 @@ button{border:none;border-radius:999px;padding:.6rem 1rem;font-size:.9rem;cursor
 /* ===================== KONFIG ===================== */
 const SCRIPT_URL =
 "https://script.google.com/macros/s/AKfycbzdbePK-rK_4lyEQiyqw51Vi2n0gUPR-llwRs5ozs1FGGj3E-xzo9jwS7pbLrCwbfOUzg/exec";
+
+const RESULT_EMAIL = "thomannpeter@bluewin.ch";
 
 let group3Enabled = false;
 
@@ -102,7 +115,9 @@ function parseGroups(t){
 
 async function loadGroups(){
   const r = await fetch("gruppen.txt?ts="+Date.now(),{cache:"no-store"});
+  if(!r.ok) throw new Error("gruppen.txt nicht gefunden");
   const g = parseGroups(await r.text());
+
   ["g1","g2","g3"].forEach(id=>{
     const s=document.getElementById(id);
     if(!s) return;
@@ -124,22 +139,23 @@ function createGroup(n){
     <h2>Schützen – Gruppe ${n}</h2>
     <div id="title${n}" class="group-title">–</div>
     <table>
-      <thead>
-        <tr><th>#</th><th>Name*</th><th>Jahrgang*</th><th>Resultat*</th></tr>
-      </thead>
+      <thead><tr><th>#</th><th>Name*</th><th>Jahrgang*</th><th>Resultat*</th></tr></thead>
       <tbody></tbody>
       <tfoot>
-        <tr><th colspan="3">Summe Gruppe ${n}</th>
-        <th id="sum${n}" class="sum-cell">0</th></tr>
+        <tr>
+          <th colspan="3">Summe Gruppe ${n}</th>
+          <th id="sum${n}" class="sum-cell">0</th>
+        </tr>
       </tfoot>
     </table>`;
+
   const tb=c.querySelector("tbody");
   for(let i=1;i<=4;i++){
     tb.innerHTML+=`
       <tr>
         <td>${i}</td>
-        <td><input></td>
-        <td><input type="number"></td>
+        <td><input class="name"></td>
+        <td><input type="number" class="year"></td>
         <td><input type="number" class="res"></td>
       </tr>`;
   }
@@ -154,72 +170,77 @@ function updateTitles(){
   if(group3Enabled) title3.textContent = g3.value || "–";
 }
 
-/* ===================== BERECHNUNG ===================== */
+/* ===================== SUMMEN ===================== */
 function calc(n){
   let s=0;
-  document.querySelectorAll(`#group${n} .res`).forEach(i=>s+=parseInt(i.value)||0);
-  document.getElementById("sum"+n).textContent=s;
+  document.querySelectorAll(`#group${n} .res`).forEach(i=>s += parseInt(i.value)||0);
+  document.getElementById("sum"+n).textContent = s;
   updateWinner();
 }
 
+/* ===================== SIEGER ===================== */
 function updateWinner(){
   const arr=[
-    {n:1,v:+sum1.textContent||0},
-    {n:2,v:+sum2.textContent||0},
-    ...(group3Enabled?[{n:3,v:+sum3.textContent||0}]:[])
+    {n:1,v:+sum1.textContent||0, name:g1.value || "Gruppe 1"},
+    {n:2,v:+sum2.textContent||0, name:g2.value || "Gruppe 2"},
+    ...(group3Enabled ? [{n:3,v:+sum3.textContent||0, name:g3.value || "Gruppe 3"}] : [])
   ].filter(x=>x.v>0);
 
   const b=winner;
   if(!arr.length){b.textContent="Noch keine Resultate";b.className="winner-box winner-none";return;}
+
   arr.sort((a,b)=>b.v-a.v);
-  if(arr[1]&&arr[0].v===arr[1].v){
-    b.textContent="🤝 Unentschieden ("+arr[0].v+")";
+  const best = arr[0];
+  const tied = arr.filter(x=>x.v===best.v);
+
+  if(tied.length>1){
+    b.textContent="🤝 Unentschieden ("+best.v+") – " + tied.map(x=>x.name).join(" / ");
     b.className="winner-box winner-draw";
   }else{
-    b.textContent="🏆 Sieger: Gruppe "+arr[0].n+" (Total "+arr[0].v+")";
-    b.className="winner-box winner-g"+arr[0].n;
+    b.textContent="🏆 Sieger: " + best.name + " (Total " + best.v + ")";
+    b.className="winner-box winner-g"+best.n;
   }
 }
 
-/* ===================== GRUPPE 3 ===================== */
+/* ===================== GRUPPE 3 TOGGLE ===================== */
 toggleG3.onclick=()=>{
   if(!group3Enabled){
     group3Enabled=true;
     g3Row.style.display="block";
     createGroup(3);
     toggleG3.textContent="➖ 3. Gruppe entfernen";
+    g3.onchange=updateTitles;
+    updateTitles();
   }else{
-    if(!confirm("Gruppe 3 wirklich entfernen?"))return;
+    if(!confirm("Gruppe 3 wirklich entfernen?")) return;
     group3Enabled=false;
     g3Row.style.display="none";
-    document.getElementById("group3").remove();
+    document.getElementById("group3")?.remove();
     toggleG3.textContent="➕ 3. Gruppe hinzufügen";
     updateWinner();
   }
 };
 
-/* ===================== SENDEN ===================== */
-async function send(){
-  const data={
-    chef:chef.value,
-    email:email.value,
-    gruppe1:g1.value,
-    gruppe2:g2.value,
-    gruppe3:group3Enabled?g3.value:"",
-    total1:+sum1.textContent||0,
-    total2:+sum2.textContent||0,
-    total3:group3Enabled?+sum3.textContent||0:0
-  };
-  const r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
-  const res=await r.json();
-  alert(res.status==="ok"?"✅ Resultat gespeichert":"❌ "+res.message);
+/* ===================== VALIDIERUNG ===================== */
+function clearErrors(){
+  document.querySelectorAll(".error").forEach(x=>x.classList.remove("error"));
 }
 
-/* ===================== START ===================== */
-loadGroups();
-createGroup(1);
-createGroup(2);
-[g1,g2].forEach(x=>x.onchange=updateTitles);
-</script>
-</body>
-</html>
+function validate(){
+  clearErrors();
+
+  if(!chef.value.trim()){ chef.classList.add("error"); alert("Bitte Name Gruppenchef eingeben."); return false; }
+  if(!email.value.trim()){ email.classList.add("error"); alert("Bitte E-Mail eingeben."); return false; }
+  if(!g1.value){ g1.classList.add("error"); alert("Bitte Gruppe 1 wählen."); return false; }
+  if(!g2.value){ g2.classList.add("error"); alert("Bitte Gruppe 2 wählen."); return false; }
+
+  // Mindestens eine gefüllte Zeile in Gruppe 1
+  const rows = document.querySelectorAll("#group1 tbody tr");
+  let hasAny = false;
+  let ok = true;
+
+  rows.forEach(tr=>{
+    const name = tr.querySelector(".name");
+    const year = tr.querySelector(".year");
+    const res  = tr.querySelector(".res");
+    const any = name.value.trim() || year.value.trim() || res.value.trim(
