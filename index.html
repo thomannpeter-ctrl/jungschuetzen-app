@@ -21,18 +21,15 @@ table{width:100%;border-collapse:collapse;font-size:.85rem}
 th,td{border:1px solid #e5e7eb;padding:.35rem;text-align:center}
 th{background:#dbeafe}
 .sum-cell{background:#f3f4f6;font-weight:700}
-.group-title{
-  font-weight:700;
-  margin:.5rem 0;
-  color:#0f172a;
-}
-button{border:none;border-radius:999px;padding:.6rem 1rem;
-font-size:.9rem;cursor:pointer}
+.group-title{font-weight:700;margin:.5rem 0;color:#0f172a}
+button{border:none;border-radius:999px;padding:.6rem 1rem;font-size:.9rem;cursor:pointer}
 .btn-primary{background:#2563eb;color:#fff}
+.btn-secondary{background:#e5e7eb}
 .winner-box{padding:.6rem;border-radius:999px;font-weight:700}
 .winner-none{background:#e5e7eb}
 .winner-g1{background:#dcfce7;color:#166534}
 .winner-g2{background:#dbeafe;color:#1d4ed8}
+.winner-g3{background:#fee2e2;color:#991b1b}
 .winner-draw{background:#fef9c3;color:#854d0e}
 </style>
 </head>
@@ -66,7 +63,13 @@ font-size:.9rem;cursor:pointer}
     <label>Gruppe 2</label>
     <select id="g2"></select>
   </div>
+  <div class="field" id="g3Row" style="display:none">
+    <label>Gruppe 3 (optional)</label>
+    <select id="g3"></select>
+  </div>
 </div>
+
+<button class="btn-secondary" id="toggleG3">➕ 3. Gruppe hinzufügen</button>
 </div>
 
 <!-- Gruppen -->
@@ -90,19 +93,19 @@ font-size:.9rem;cursor:pointer}
 const SCRIPT_URL =
 "https://script.google.com/macros/s/AKfycbzdbePK-rK_4lyEQiyqw51Vi2n0gUPR-llwRs5ozs1FGGj3E-xzo9jwS7pbLrCwbfOUzg/exec";
 
+let group3Enabled = false;
+
 /* ===================== GRUPPEN LADEN ===================== */
 function parseGroups(t){
-  return t.split(/\r?\n/)
-    .map(l=>l.trim())
-    .filter(l=>l && !l.startsWith("#"));
+  return t.split(/\r?\n/).map(l=>l.trim()).filter(l=>l && !l.startsWith("#"));
 }
 
 async function loadGroups(){
-  const r = await fetch("gruppen.txt?ts=" + Date.now(), { cache:"no-store" });
+  const r = await fetch("gruppen.txt?ts="+Date.now(),{cache:"no-store"});
   const g = parseGroups(await r.text());
-
-  ["g1","g2"].forEach(id=>{
+  ["g1","g2","g3"].forEach(id=>{
     const s=document.getElementById(id);
+    if(!s) return;
     s.innerHTML="<option value=''>Bitte wählen …</option>";
     g.forEach(x=>{
       const o=document.createElement("option");
@@ -117,30 +120,19 @@ function createGroup(n){
   const c=document.createElement("div");
   c.className="card";
   c.id="group"+n;
-
   c.innerHTML=`
     <h2>Schützen – Gruppe ${n}</h2>
     <div id="title${n}" class="group-title">–</div>
-
     <table>
       <thead>
-        <tr>
-          <th>#</th>
-          <th>Name*</th>
-          <th>Jahrgang*</th>
-          <th>Resultat*</th>
-        </tr>
+        <tr><th>#</th><th>Name*</th><th>Jahrgang*</th><th>Resultat*</th></tr>
       </thead>
       <tbody></tbody>
       <tfoot>
-        <tr>
-          <th colspan="3">Summe Gruppe ${n}</th>
-          <th id="sum${n}" class="sum-cell">0</th>
-        </tr>
+        <tr><th colspan="3">Summe Gruppe ${n}</th>
+        <th id="sum${n}" class="sum-cell">0</th></tr>
       </tfoot>
-    </table>
-  `;
-
+    </table>`;
   const tb=c.querySelector("tbody");
   for(let i=1;i<=4;i++){
     tb.innerHTML+=`
@@ -151,84 +143,83 @@ function createGroup(n){
         <td><input type="number" class="res"></td>
       </tr>`;
   }
-
   tb.querySelectorAll(".res").forEach(i=>i.oninput=()=>calc(n));
   document.getElementById("groups").appendChild(c);
 }
 
-/* ===================== TITEL AKTUALISIEREN ===================== */
-function updateGroupTitles(){
-  document.getElementById("title1").textContent =
-    g1.value || "–";
-
-  document.getElementById("title2").textContent =
-    g2.value || "–";
+/* ===================== TITEL ===================== */
+function updateTitles(){
+  title1.textContent = g1.value || "–";
+  title2.textContent = g2.value || "–";
+  if(group3Enabled) title3.textContent = g3.value || "–";
 }
 
 /* ===================== BERECHNUNG ===================== */
 function calc(n){
-  let sum=0;
-  document.querySelectorAll(`#group${n} .res`).forEach(i=>{
-    sum += parseInt(i.value) || 0;
-  });
-  document.getElementById("sum"+n).textContent = sum;
+  let s=0;
+  document.querySelectorAll(`#group${n} .res`).forEach(i=>s+=parseInt(i.value)||0);
+  document.getElementById("sum"+n).textContent=s;
   updateWinner();
 }
 
 function updateWinner(){
-  const t=[
+  const arr=[
     {n:1,v:+sum1.textContent||0},
-    {n:2,v:+sum2.textContent||0}
+    {n:2,v:+sum2.textContent||0},
+    ...(group3Enabled?[{n:3,v:+sum3.textContent||0}]:[])
   ].filter(x=>x.v>0);
 
-  const b=document.getElementById("winner");
-  if(!t.length){
-    b.textContent="Noch keine Resultate";
-    b.className="winner-box winner-none";
-    return;
-  }
-
-  t.sort((a,b)=>b.v-a.v);
-  if(t[1] && t[0].v===t[1].v){
-    b.textContent="🤝 Unentschieden ("+t[0].v+")";
+  const b=winner;
+  if(!arr.length){b.textContent="Noch keine Resultate";b.className="winner-box winner-none";return;}
+  arr.sort((a,b)=>b.v-a.v);
+  if(arr[1]&&arr[0].v===arr[1].v){
+    b.textContent="🤝 Unentschieden ("+arr[0].v+")";
     b.className="winner-box winner-draw";
   }else{
-    b.textContent="🏆 Sieger: Gruppe "+t[0].n+" (Total "+t[0].v+")";
-    b.className="winner-box winner-g"+t[0].n;
+    b.textContent="🏆 Sieger: Gruppe "+arr[0].n+" (Total "+arr[0].v+")";
+    b.className="winner-box winner-g"+arr[0].n;
   }
 }
+
+/* ===================== GRUPPE 3 ===================== */
+toggleG3.onclick=()=>{
+  if(!group3Enabled){
+    group3Enabled=true;
+    g3Row.style.display="block";
+    createGroup(3);
+    toggleG3.textContent="➖ 3. Gruppe entfernen";
+  }else{
+    if(!confirm("Gruppe 3 wirklich entfernen?"))return;
+    group3Enabled=false;
+    g3Row.style.display="none";
+    document.getElementById("group3").remove();
+    toggleG3.textContent="➕ 3. Gruppe hinzufügen";
+    updateWinner();
+  }
+};
 
 /* ===================== SENDEN ===================== */
 async function send(){
   const data={
-    chef: chef.value,
-    email: email.value,
-    gruppe1: g1.value,
-    gruppe2: g2.value,
-    total1: +sum1.textContent||0,
-    total2: +sum2.textContent||0
+    chef:chef.value,
+    email:email.value,
+    gruppe1:g1.value,
+    gruppe2:g2.value,
+    gruppe3:group3Enabled?g3.value:"",
+    total1:+sum1.textContent||0,
+    total2:+sum2.textContent||0,
+    total3:group3Enabled?+sum3.textContent||0:0
   };
-
-  const r = await fetch(SCRIPT_URL,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify(data)
-  });
-
-  const res = await r.json();
-  alert(res.status==="ok"
-    ? "✅ Resultat erfolgreich gespeichert"
-    : "❌ Fehler: "+res.message);
+  const r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+  const res=await r.json();
+  alert(res.status==="ok"?"✅ Resultat gespeichert":"❌ "+res.message);
 }
 
 /* ===================== START ===================== */
 loadGroups();
 createGroup(1);
 createGroup(2);
-
-g1.addEventListener("change", updateGroupTitles);
-g2.addEventListener("change", updateGroupTitles);
+[g1,g2].forEach(x=>x.onchange=updateTitles);
 </script>
-
 </body>
 </html>
