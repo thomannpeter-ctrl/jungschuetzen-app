@@ -243,4 +243,99 @@ function validate(){
     const name = tr.querySelector(".name");
     const year = tr.querySelector(".year");
     const res  = tr.querySelector(".res");
-    const any = name.value.trim() || year.value.trim() || res.value.trim(
+    const any = name.value.trim() || year.value.trim() || res.value.trim();
+    if(!any) return;
+    hasAny = true;
+    if(!name.value.trim()){ name.classList.add("error"); ok=false; }
+    if(!year.value.trim()){ year.classList.add("error"); ok=false; }
+    if(!res.value.trim()){ res.classList.add("error"); ok=false; }
+  });
+
+  if(!hasAny){ alert("Bitte in Gruppe 1 mindestens einen Schützen erfassen."); return false; }
+  if(!ok){ alert("Bitte Pflichtfelder (Name/Jahrgang/Resultat) in erfassten Zeilen ausfüllen."); return false; }
+
+  return true;
+}
+
+/* ===================== E-MAIL TEXT ===================== */
+function buildEmailBody(){
+  const t1 = +sum1.textContent||0;
+  const t2 = +sum2.textContent||0;
+  const t3 = group3Enabled ? (+sum3.textContent||0) : 0;
+
+  let body = "";
+  body += "Amtscup Jungschützen – Cup-Duell\n";
+  body += "\nGruppenchef: " + chef.value.trim();
+  body += "\nE-Mail: " + email.value.trim();
+  body += "\nGruppe 1: " + (g1.value || "-") + " (Summe " + t1 + ")";
+  body += "\nGruppe 2: " + (g2.value || "-") + " (Summe " + t2 + ")";
+  if(group3Enabled) body += "\nGruppe 3: " + (g3.value || "-") + " (Summe " + t3 + ")";
+  body += "\n\nHinweis: Detail-Schützen stehen im Formular (Browser).";
+  body += "\nGesendet am: " + new Date().toLocaleString();
+
+  return body;
+}
+
+/* ===================== SAVE: SHEETS + MAIL ===================== */
+async function saveAll(){
+  if(!validate()) return;
+
+  // 1) ZUERST: Google Sheets
+  const payload = {
+    chef: chef.value.trim(),
+    email: email.value.trim(),
+    gruppe1: g1.value || "",
+    gruppe2: g2.value || "",
+    gruppe3: group3Enabled ? (g3.value || "") : "",
+    total1: +sum1.textContent||0,
+    total2: +sum2.textContent||0,
+    total3: group3Enabled ? (+sum3.textContent||0) : 0
+  };
+
+  try{
+    const r = await fetch(SCRIPT_URL,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify(payload)
+    });
+
+    const res = await r.json();
+    if(res.status !== "ok"){
+      alert("❌ Google-Sheets Fehler: " + (res.message || "unbekannt"));
+      return;
+    }
+
+    // 2) DANACH: Mailprogramm öffnen (mailto)
+    const subject = "Amtscup Jungschützen – Resultat " + (g1.value||"") + " vs. " + (g2.value||"");
+    const body = buildEmailBody();
+    const mailto = "mailto:" + encodeURIComponent(RESULT_EMAIL)
+      + "?subject=" + encodeURIComponent(subject)
+      + "&body=" + encodeURIComponent(body);
+
+    alert("✅ In Google-Tabelle gespeichert.\nJetzt öffnet sich die E-Mail…");
+    window.location.href = mailto;
+
+  }catch(err){
+    alert("❌ Verbindung fehlgeschlagen (Sheets). Prüfe SCRIPT_URL / Bereitstellung / Berechtigungen.");
+    console.error(err);
+  }
+}
+
+/* ===================== START ===================== */
+(async ()=>{
+  try{
+    await loadGroups();
+  }catch(e){
+    alert("Fehler: gruppen.txt konnte nicht geladen werden. Liegt gruppen.txt im gleichen Ordner wie index.html?");
+    console.error(e);
+  }
+
+  createGroup(1);
+  createGroup(2);
+
+  g1.onchange=updateTitles;
+  g2.onchange=updateTitles;
+})();
+</script>
+</body>
+</html>
