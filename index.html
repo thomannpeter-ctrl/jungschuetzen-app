@@ -82,16 +82,20 @@ button{
 <div id="groups"></div>
 
 <div class="card">
-<button onclick="sendMail()">📧 Resultat senden</button>
+<button onclick="sendResult()">📧 Resultat senden</button>
 </div>
 
 </div>
 
 <script>
-/* ===== Gruppen aus gruppen.txt ===== */
+/* ================= KONFIG ================= */
+const SCRIPT_URL =
+"https://script.google.com/macros/s/AKfycbzTSku5sCe_J34LU49BHtuJK1gTux6ldG_LndStte6DPABoQ-38Nc_6hvh9LeKbnSrVmQ/exec";
+
+/* ================= GRUPPEN LADEN ================= */
 async function loadGroups(){
-  const r=await fetch("gruppen.txt?ts="+Date.now(),{cache:"no-store"});
-  const g=r.ok?(await r.text()).split(/\r?\n/).filter(x=>x.trim()):[];
+  const r = await fetch("gruppen.txt?ts="+Date.now(),{cache:"no-store"});
+  const g = r.ok ? (await r.text()).split(/\r?\n/).filter(x=>x.trim()) : [];
   ["g1","g2","g3"].forEach(id=>{
     const s=document.getElementById(id);
     s.innerHTML="<option value=''>Bitte wählen …</option>";
@@ -103,7 +107,7 @@ async function loadGroups(){
   });
 }
 
-/* ===== Tabellen ===== */
+/* ================= TABELLEN ================= */
 function createGroup(n){
   const c=document.createElement("div");
   c.className="card";
@@ -116,7 +120,8 @@ function createGroup(n){
       </thead>
       <tbody></tbody>
       <tfoot>
-        <tr><th colspan="3">Summe Gruppe ${n}</th><th id="sum${n}" class="sum">0</th></tr>
+        <tr><th colspan="3">Summe Gruppe ${n}</th>
+        <th id="sum${n}" class="sum">0</th></tr>
       </tfoot>
     </table>`;
   const tb=c.querySelector("tbody");
@@ -146,40 +151,66 @@ function updateTitles(){
   });
 }
 
-/* ===== MAIL ===== */
-function sendMail(){
+/* ================= SENDEN ================= */
+function sendResult(){
   if(!g1.value){
     alert("Mindestens Gruppe 1 auswählen");
     return;
   }
 
-  let body="";
-  body+="AMTSCUP JUNGSCHÜTZEN – RESULTAT\n";
-  body+="================================\n\n";
-  body+="GRUPPENCHEF\n";
-  body+="Name;E-Mail\n";
-  body+=`${chef.value||"-"};${email.value||"-"}\n\n`;
+  let mail =
+"AMTSCUP JUNGSCHÜTZEN – RESULTAT\n\n"+
+"GRUPPENCHEF\n"+
+`${chef.value};${email.value}\n\n`;
+
+  const entries=[];
 
   [1,2,3].forEach(n=>{
-    const g=document.getElementById("g"+n).value;
-    if(!g) return;
+    const gruppe=document.getElementById("g"+n).value;
+    if(!gruppe) return;
 
-    body+=`GRUPPE ${n};${g}\n`;
-    body+="Name;Jahrgang;Resultat\n";
+    const sum=document.getElementById("sum"+n).textContent;
+    mail+=`GRUPPE ${n};${gruppe}\nName;Jahrgang;Resultat\n`;
+
     document.querySelectorAll(`#group${n} tbody tr`).forEach(tr=>{
-      const v=[...tr.querySelectorAll("input")].map(i=>i.value.trim());
-      if(v.join("")) body+=`${v[0]||"-"};${v[1]||"-"};${v[2]||"0"}\n`;
+      const i=tr.querySelectorAll("input");
+      const name=i[0].value.trim();
+      const jahr=i[1].value.trim();
+      const res=i[2].value.trim();
+
+      if(!name && !res) return;
+
+      mail+=`${name};${jahr};${res}\n`;
+
+      entries.push({
+        chef: chef.value,
+        email: email.value,
+        gruppe: gruppe,
+        name: name,
+        jahrgang: jahr,
+        resultat: res,
+        summe: sum
+      });
     });
-    body+=`SUMME;;${document.getElementById("sum"+n).textContent}\n\n`;
+
+    mail+=`SUMME;;${sum}\n\n`;
   });
 
-  location.href=
+  /* MAIL */
+  location.href =
     "mailto:thomannpeter@bluewin.ch"+
     "?subject="+encodeURIComponent("Amtscup Jungschützen – Resultat")+
-    "&body="+encodeURIComponent(body);
+    "&body="+encodeURIComponent(mail);
+
+  /* GOOGLE TABELLE */
+  fetch(SCRIPT_URL,{
+    method:"POST",
+    headers:{"Content-Type":"application/x-www-form-urlencoded"},
+    body:"payload="+encodeURIComponent(JSON.stringify({entries}))
+  });
 }
 
-/* START */
+/* ================= START ================= */
 loadGroups();
 createGroup(1);
 createGroup(2);
