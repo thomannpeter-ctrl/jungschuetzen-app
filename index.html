@@ -24,7 +24,7 @@ th.zcol,td.zcol{width:65px}
 table{width:100%;border-collapse:collapse;font-size:.85rem}
 th,td{border:1px solid #e5e7eb;padding:.4rem;text-align:center}
 th{background:#dbeafe}
-button{border:none;border-radius:999px;padding:.8rem;font-size:1rem;cursor:pointer;background:#2563eb;color:white;width:100%}
+button{border:none;border-radius:999px;padding:.9rem;font-size:1rem;cursor:pointer;background:#2563eb;color:white;width:100%}
 .winner{padding:.7rem;border-radius:12px;font-weight:700}
 .winner-ok{background:#dcfce7;color:#166534}
 .winner-none{background:#e5e7eb;color:#374151}
@@ -60,17 +60,15 @@ button{border:none;border-radius:999px;padding:.8rem;font-size:1rem;cursor:point
 <div id="winner" class="winner winner-none">Noch keine Resultate</div>
 </div>
 
+<!-- ✅ NUR EIN BUTTON -->
 <div class="card">
-<button onclick="sendResult()">📧 Resultat per Mail senden</button>
-</div>
-
-<div class="card">
-<button onclick="sendToGoogle()">📊 In Google Tabelle speichern</button>
+<button onclick="sendAll()">📧 Resultat senden</button>
 </div>
 
 </div>
 
 <script>
+/* ================= KONFIG ================= */
 const RESULT_EMAIL="thomannpeter@bluewin.ch";
 const GOOGLE_URL="https://script.google.com/macros/s/AKfycbzv3eifzrGNnxJ46NyofE_g-T_TcuGC37BxtkpKKoDh97NFn8c56rAujWMYnA1DlZos_g/exec";
 
@@ -81,11 +79,11 @@ const SPORTGERAETE=[
 ];
 const zus=g=>(SPORTGERAETE.find(x=>x.n===g)||{z:0}).z;
 
+/* ================= LADEN ================= */
 async function loadGroups(){
  const r=await fetch("gruppen.txt?ts="+Date.now());
  const list=(await r.text()).split(/\r?\n/).filter(x=>x.trim());
-
- ["g1","g2","g3"].forEach((id,i)=>{
+ ["g1","g2","g3"].forEach(id=>{
   const s=document.getElementById(id);
   s.innerHTML="<option value=''>Bitte wählen…</option>";
   list.forEach(g=>{
@@ -93,21 +91,17 @@ async function loadGroups(){
     o.value=o.textContent=g;
     s.appendChild(o);
   });
-  s.onchange=()=>showGroup(i+1);
+  s.onchange=buildGroups;
  });
 }
 
-function showGroup(n){
- const sel=document.getElementById("g"+n);
- const name=sel.value;
- if(!name) return;
-
- const existing=document.querySelector(`.card[data-n='${n}']`);
- if(existing) existing.remove();
-
- const g=createGroup(n,name);
- g.dataset.n=n;
- groups.appendChild(g);
+/* ================= GRUPPEN ================= */
+function buildGroups(){
+ groups.innerHTML="";
+ [1,2,3].forEach(n=>{
+  const name=document.getElementById("g"+n).value;
+  if(name) groups.appendChild(createGroup(n,name));
+ });
  calcWinner();
 }
 
@@ -115,17 +109,15 @@ function createGroup(n,name){
  const c=document.createElement("div");
  c.className="card";
  c.dataset.name=name;
- c.innerHTML=`<h2>Gruppe ${n}: ${name}</h2>
- <table>
+ c.innerHTML=`<h2>Gruppe ${n}: ${name}</h2><table>
  <thead><tr><th>#</th><th>Name</th><th>Jahrgang</th>
  <th class="gear">Sportgerät</th><th>Resultat</th>
  <th class="zcol">Zuschlag</th><th>Total</th></tr></thead>
  <tbody></tbody>
  <tfoot><tr><th colspan="4">Summe</th>
- <th class="sr">0</th><th class="sz">0</th><th class="st">0</th></tr></tfoot>
- </table>`;
-
+ <th class="sr">0</th><th class="sz">0</th><th class="st">0</th></tr></tfoot></table>`;
  const tb=c.querySelector("tbody");
+
  for(let i=1;i<=5;i++){
   const tr=document.createElement("tr");
   tr.innerHTML=`<td>${i}</td>
@@ -135,9 +127,9 @@ function createGroup(n,name){
   <td><input class="r input-result"></td>
   <td class="zcol z">0</td><td class="t">0</td>`;
   SPORTGERAETE.forEach(s=>{
-   const o=document.createElement("option");
-   o.value=o.textContent=s.n;
-   tr.querySelector(".g").appendChild(o);
+    const o=document.createElement("option");
+    o.value=o.textContent=s.n;
+    tr.querySelector(".g").appendChild(o);
   });
   tr.querySelectorAll("input,select").forEach(e=>e.oninput=()=>calc(c));
   tb.appendChild(tr);
@@ -145,6 +137,7 @@ function createGroup(n,name){
  return c;
 }
 
+/* ================= BERECHNUNG ================= */
 function calc(c){
  let sr=0,sz=0,st=0;
  c.querySelectorAll("tbody tr").forEach(tr=>{
@@ -166,11 +159,59 @@ function calcWinner(){
              .filter(x=>x.t>0).sort((a,b)=>b.t-a.t);
  if(!d.length){winner.textContent="Noch keine Resultate";return;}
  winner.className="winner winner-ok";
- winner.innerHTML=`🏆 Sieger: ${d[0].n} (${d[0].t})`;
+ winner.innerHTML=d.length===2
+  ?`🏆 Sieger: ${d[0].n} (${d[0].t})<br>❌ Verlierer: ${d[1].n} (${d[1].t})`
+  :`🏆 Sieger: ${d[0].n} (${d[0].t}) & ${d[1].n} (${d[1].t})<br>❌ Verlierer: ${d[2].n} (${d[2].t})`;
 }
 
-function sendResult(){ alert("Mail-Funktion unverändert"); }
-function sendToGoogle(){ alert("Google-Funktion unverändert"); }
+/* ================= SENDEN ================= */
+function sendAll(){
+ sendToGoogle();
+ setTimeout(sendResult,300);
+}
+
+function sendResult(){
+ let body=`AMTSCUP CUP-DUELL\n\nGruppenchef: ${chef.value}\nE-Mail: ${email.value}\n\n`;
+ document.querySelectorAll("#groups .card").forEach((c,i)=>{
+  body+=`GRUPPE ${i+1}: ${c.dataset.name}\n`;
+  body+="Name;Jahrgang;Sportgerät;Resultat;Zuschlag;Total\n";
+  c.querySelectorAll("tbody tr").forEach(tr=>{
+   const n=tr.querySelector(".n").value;
+   const r=tr.querySelector(".r").value;
+   if(n||r)
+    body+=`${n};${tr.querySelector(".y").value};${tr.querySelector(".g").value};${r};${tr.querySelector(".z").textContent};${tr.querySelector(".t").textContent}\n`;
+  });
+  body+="\n";
+ });
+ body+="SIEGER:\n"+winner.textContent;
+ location.href=`mailto:${RESULT_EMAIL}?subject=${encodeURIComponent("Amtscup Resultat")}&body=${encodeURIComponent(body)}`;
+}
+
+function sendToGoogle(){
+ const rows=[];
+ document.querySelectorAll("#groups .card").forEach(c=>{
+  const gruppe=c.dataset.name;
+  c.querySelectorAll("tbody tr").forEach(tr=>{
+   const name=tr.querySelector(".n").value;
+   const r=tr.querySelector(".r").value;
+   if(!name&&!r) return;
+   rows.push({
+     gruppe,
+     name,
+     jahr:tr.querySelector(".y").value,
+     geraet:tr.querySelector(".g").value,
+     resultat:r,
+     zuschlag:tr.querySelector(".z").textContent,
+     total:tr.querySelector(".t").textContent
+   });
+  });
+ });
+ fetch(GOOGLE_URL,{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({chef:chef.value,email:email.value,rows})
+ });
+}
 
 loadGroups();
 </script>
