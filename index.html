@@ -19,11 +19,13 @@ label{font-size:.8rem;font-weight:600}
 input,select{width:100%;padding:.45rem;border-radius:8px;border:1px solid #cbd5f5}
 .input-year{max-width:80px}
 .input-result{max-width:70px}
+th.gear,td.gear{width:90px}
+th.zcol,td.zcol{width:65px}
 table{width:100%;border-collapse:collapse;font-size:.85rem}
 th,td{border:1px solid #e5e7eb;padding:.4rem;text-align:center}
 th{background:#dbeafe}
-button{border:none;border-radius:999px;padding:.9rem;font-size:1rem;
-cursor:pointer;background:#2563eb;color:white;width:100%}
+button{border:none;border-radius:999px;padding:.8rem;font-size:1rem;cursor:pointer;
+background:#2563eb;color:white;width:100%}
 .winner{padding:.7rem;border-radius:12px;font-weight:700}
 .winner-ok{background:#dcfce7;color:#166534}
 .winner-none{background:#e5e7eb;color:#374151}
@@ -52,7 +54,8 @@ cursor:pointer;background:#2563eb;color:white;width:100%}
 </div>
 </div>
 
-<div id="groups"></div>
+<!-- 🔹 Gruppen anfangs versteckt -->
+<div id="groups" style="display:none"></div>
 
 <div class="card">
 <h2>Sieger</h2>
@@ -60,12 +63,17 @@ cursor:pointer;background:#2563eb;color:white;width:100%}
 </div>
 
 <div class="card">
-<button onclick="sendResult()">📧 Resultat senden</button>
+<button onclick="sendResult()">📧 Resultat per Mail senden</button>
+</div>
+
+<div class="card">
+<button onclick="sendToGoogle()">📊 In Google Tabelle speichern</button>
 </div>
 
 </div>
 
 <script>
+/* ================= KONFIG ================= */
 const RESULT_EMAIL="thomannpeter@bluewin.ch";
 const GOOGLE_URL="https://script.google.com/macros/s/AKfycbzv3eifzrGNnxJ46NyofE_g-T_TcuGC37BxtkpKKoDh97NFn8c56rAujWMYnA1DlZos_g/exec";
 
@@ -76,6 +84,7 @@ const SPORTGERAETE=[
 ];
 const zus=g=>(SPORTGERAETE.find(x=>x.n===g)||{z:0}).z;
 
+/* ================= APP ================= */
 async function loadGroups(){
  const r=await fetch("gruppen.txt?ts="+Date.now());
  const list=(await r.text()).split(/\r?\n/).filter(x=>x.trim());
@@ -92,11 +101,19 @@ async function loadGroups(){
 }
 
 function buildGroups(){
- groups.innerHTML="";
+ const container=document.getElementById("groups");
+ container.innerHTML="";
+
+ let anySelected=false;
+
  [1,2,3].forEach(n=>{
   const name=document.getElementById("g"+n).value;
-  if(name) groups.appendChild(createGroup(n,name));
+  if(!name) return;
+  anySelected=true;
+  container.appendChild(createGroup(n,name));
  });
+
+ container.style.display = anySelected ? "block" : "none";
  calcWinner();
 }
 
@@ -104,21 +121,30 @@ function createGroup(n,name){
  const c=document.createElement("div");
  c.className="card";
  c.dataset.name=name;
- c.innerHTML=`<h2>Gruppe ${n}: ${name}</h2><table>
- <thead><tr><th>#</th><th>Name</th><th>Jahr</th><th>Gerät</th>
- <th>Res</th><th>Z</th><th>Total</th></tr></thead>
+ c.innerHTML=`
+ <h2>Gruppe ${n}: ${name}</h2>
+ <table>
+ <thead><tr>
+ <th>#</th><th>Name</th><th>Jahrgang</th>
+ <th class="gear">Sportgerät</th><th>Resultat</th>
+ <th class="zcol">Zuschlag</th><th>Total</th>
+ </tr></thead>
  <tbody></tbody>
  <tfoot><tr><th colspan="4">Summe</th>
- <th class="sr">0</th><th class="sz">0</th><th class="st">0</th></tr></tfoot></table>`;
+ <th class="sr">0</th><th class="sz">0</th><th class="st">0</th>
+ </tr></tfoot>
+ </table>`;
  const tb=c.querySelector("tbody");
+
  for(let i=1;i<=5;i++){
   const tr=document.createElement("tr");
-  tr.innerHTML=`<td>${i}</td>
+  tr.innerHTML=`
+  <td>${i}</td>
   <td><input class="n"></td>
-  <td><input class="y"></td>
-  <td><select class="g"></select></td>
-  <td><input class="r"></td>
-  <td class="z">0</td><td class="t">0</td>`;
+  <td><input class="y input-year"></td>
+  <td class="gear"><select class="g"></select></td>
+  <td><input class="r input-result"></td>
+  <td class="zcol z">0</td><td class="t">0</td>`;
   SPORTGERAETE.forEach(s=>{
    const o=document.createElement("option");
    o.value=o.textContent=s.n;
@@ -154,40 +180,52 @@ function calcWinner(){
  winner.innerHTML=`🏆 Sieger: ${d[0].n} (${d[0].t})`;
 }
 
-/* ===== EIN Button – Mail + Google ===== */
+/* ===== Mail ===== */
 function sendResult(){
- const rows=[];
- document.querySelectorAll("#groups .card").forEach(c=>{
+ let body=`AMTSCUP CUP-DUELL\n\nGruppenchef: ${chef.value}\nE-Mail: ${email.value}\n\n`;
+ document.querySelectorAll("#groups .card").forEach((c,i)=>{
+  body+=`GRUPPE ${i+1}: ${c.dataset.name}\n`;
+  body+="Name;Jahrgang;Sportgerät;Resultat;Zuschlag;Total\n";
   c.querySelectorAll("tbody tr").forEach(tr=>{
    const n=tr.querySelector(".n").value;
    const r=tr.querySelector(".r").value;
-   if(n||r){
-    rows.push({
-     gruppe:c.dataset.name,
-     name:n,
+   if(n||r)
+    body+=`${n};${tr.querySelector(".y").value};${tr.querySelector(".g").value};${r};${tr.querySelector(".z").textContent};${tr.querySelector(".t").textContent}\n`;
+  });
+  body+="\n";
+ });
+ body+="SIEGER:\n"+winner.textContent;
+ location.href=`mailto:${RESULT_EMAIL}?subject=${encodeURIComponent("Amtscup Resultat")}&body=${encodeURIComponent(body)}`;
+}
+
+/* ===== Google Tabelle ===== */
+function sendToGoogle(){
+ const rows=[];
+ document.querySelectorAll("#groups .card").forEach(c=>{
+  const gruppe=c.dataset.name;
+  c.querySelectorAll("tbody tr").forEach(tr=>{
+   const name=tr.querySelector(".n").value;
+   const r=tr.querySelector(".r").value;
+   if(!name&&!r) return;
+   rows.push({
+     gruppe,
+     name,
      jahr:tr.querySelector(".y").value,
      geraet:tr.querySelector(".g").value,
      resultat:r,
      zuschlag:tr.querySelector(".z").textContent,
      total:tr.querySelector(".t").textContent
-    });
-   }
+   });
   });
  });
 
- // 🔹 Google (fire & forget)
  fetch(GOOGLE_URL,{
   method:"POST",
   headers:{"Content-Type":"application/json"},
   body:JSON.stringify({chef:chef.value,email:email.value,rows})
- }).catch(()=>{});
-
- // 🔹 Mail
- let body="AMTSCUP RESULTAT\n\n";
- rows.forEach(r=>{
-  body+=`${r.gruppe};${r.name};${r.resultat};${r.total}\n`;
- });
- location.href=`mailto:${RESULT_EMAIL}?subject=Amtscup Resultat&body=${encodeURIComponent(body)}`;
+ })
+ .then(()=>alert("✅ Erfolgreich in Google Tabelle gespeichert"))
+ .catch(()=>alert("❌ Fehler beim Senden"));
 }
 
 loadGroups();
