@@ -61,7 +61,7 @@ button{border:none;border-radius:999px;padding:.9rem;font-size:1rem;cursor:point
 </div>
 
 <div class="card">
-<button onclick="sendAll()">📧 Resultat senden</button>
+<button onclick="sendResult()">📧 Resultat per Mail senden</button>
 </div>
 
 </div>
@@ -69,7 +69,6 @@ button{border:none;border-radius:999px;padding:.9rem;font-size:1rem;cursor:point
 <script>
 /* ================= KONFIG ================= */
 const RESULT_EMAIL = "thomannpeter@bluewin.ch";
-const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbyRBtdxEYd8oXMaq_sVu67FLoIk5rj0jeXL6NvEqgHu2lyvBIP1y6oZ7GZrl2ODtvYW/exec";
 
 const SPORTGERAETE=[
  {n:"",z:0},{n:"Standard",z:0},{n:"FG",z:0},
@@ -136,7 +135,51 @@ function createGroup(n,name){
  return c;
 }
 
-/* ================= START ================= */
+/* ================= BERECHNUNG ================= */
+function calc(c){
+ let sr=0,sz=0,st=0;
+ c.querySelectorAll("tbody tr").forEach(tr=>{
+  const r=+tr.querySelector(".r").value||0;
+  const z=zus(tr.querySelector(".g").value);
+  tr.querySelector(".z").textContent=z;
+  tr.querySelector(".t").textContent=r+z;
+  sr+=r;sz+=z;st+=r+z;
+ });
+ c.querySelector(".sr").textContent=sr;
+ c.querySelector(".sz").textContent=sz;
+ c.querySelector(".st").textContent=st;
+ calcWinner();
+}
+
+function calcWinner(){
+ const cards=[...document.querySelectorAll("#groups .card")];
+ const d=cards.map(c=>({n:c.dataset.name,t:+c.querySelector(".st").textContent}))
+             .filter(x=>x.t>0).sort((a,b)=>b.t-a.t);
+ if(!d.length){winner.textContent="Noch keine Resultate";return;}
+ winner.className="winner winner-ok";
+ winner.innerHTML=d.length===2
+  ?`🏆 Sieger: ${d[0].n} (${d[0].t})<br>❌ Verlierer: ${d[1].n} (${d[1].t})`
+  :`🏆 Sieger: ${d[0].n} (${d[0].t}) & ${d[1].n} (${d[1].t})<br>❌ Verlierer: ${d[2].n} (${d[2].t})`;
+}
+
+/* ================= MAIL ================= */
+function sendResult(){
+ let body=`AMTSCUP CUP-DUELL\n\nGruppenchef: ${chef.value}\nE-Mail: ${email.value}\n\n`;
+ document.querySelectorAll("#groups .card").forEach((c,i)=>{
+  body+=`GRUPPE ${i+1}: ${c.dataset.name}\n`;
+  body+="Name;Jahrgang;Sportgerät;Resultat;Zuschlag;Total\n";
+  c.querySelectorAll("tbody tr").forEach(tr=>{
+   const n=tr.querySelector(".n").value;
+   const r=tr.querySelector(".r").value;
+   if(n||r)
+    body+=`${n};${tr.querySelector(".y").value};${tr.querySelector(".g").value};${r};${tr.querySelector(".z").textContent};${tr.querySelector(".t").textContent}\n`;
+  });
+  body+="\n";
+ });
+ body+="SIEGER:\n"+winner.textContent;
+ location.href=`mailto:${RESULT_EMAIL}?subject=${encodeURIComponent("Amtscup Resultat")}&body=${encodeURIComponent(body)}`;
+}
+
 loadGroups();
 </script>
 </body>
