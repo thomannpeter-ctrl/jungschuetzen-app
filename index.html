@@ -60,7 +60,6 @@ button{border:none;border-radius:999px;padding:.9rem;font-size:1rem;cursor:point
 <div id="winner" class="winner winner-none">Noch keine Resultate</div>
 </div>
 
-<!-- ✅ NUR EIN BUTTON -->
 <div class="card">
 <button onclick="sendAll()">📧 Resultat senden</button>
 </div>
@@ -69,8 +68,9 @@ button{border:none;border-radius:999px;padding:.9rem;font-size:1rem;cursor:point
 
 <script>
 /* ================= KONFIG ================= */
-const RESULT_EMAIL="thomannpeter@bluewin.ch";
-const GOOGLE_URL=https://script.google.com/macros/s/AKfycbyRBtdxEYd8oXMaq_sVu67FLoIk5rj0jeXL6NvEqgHu2lyvBIP1y6oZ7GZrl2ODtvYW/exec
+const RESULT_EMAIL = "thomannpeter@bluewin.ch";
+const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbyRBtdxEYd8oXMaq_sVu67FLoIk5rj0jeXL6NvEqgHu2lyvBIP1y6oZ7GZrl2ODtvYW/exec";
+
 const SPORTGERAETE=[
  {n:"",z:0},{n:"Standard",z:0},{n:"FG",z:0},
  {n:"Karabiner",z:4},{n:"57/02",z:8},{n:"57/03",z:4},
@@ -136,82 +136,7 @@ function createGroup(n,name){
  return c;
 }
 
-/* ================= BERECHNUNG ================= */
-function calc(c){
- let sr=0,sz=0,st=0;
- c.querySelectorAll("tbody tr").forEach(tr=>{
-  const r=+tr.querySelector(".r").value||0;
-  const z=zus(tr.querySelector(".g").value);
-  tr.querySelector(".z").textContent=z;
-  tr.querySelector(".t").textContent=r+z;
-  sr+=r;sz+=z;st+=r+z;
- });
- c.querySelector(".sr").textContent=sr;
- c.querySelector(".sz").textContent=sz;
- c.querySelector(".st").textContent=st;
- calcWinner();
-}
-
-function calcWinner(){
- const cards=[...document.querySelectorAll("#groups .card")];
- const d=cards.map(c=>({n:c.dataset.name,t:+c.querySelector(".st").textContent}))
-             .filter(x=>x.t>0).sort((a,b)=>b.t-a.t);
- if(!d.length){winner.textContent="Noch keine Resultate";return;}
- winner.className="winner winner-ok";
- winner.innerHTML=d.length===2
-  ?`🏆 Sieger: ${d[0].n} (${d[0].t})<br>❌ Verlierer: ${d[1].n} (${d[1].t})`
-  :`🏆 Sieger: ${d[0].n} (${d[0].t}) & ${d[1].n} (${d[1].t})<br>❌ Verlierer: ${d[2].n} (${d[2].t})`;
-}
-
-/* ================= SENDEN ================= */
-function sendAll(){
- sendToGoogle();
- setTimeout(sendResult,300);
-}
-
-function sendResult(){
- let body=`AMTSCUP CUP-DUELL\n\nGruppenchef: ${chef.value}\nE-Mail: ${email.value}\n\n`;
- document.querySelectorAll("#groups .card").forEach((c,i)=>{
-  body+=`GRUPPE ${i+1}: ${c.dataset.name}\n`;
-  body+="Name;Jahrgang;Sportgerät;Resultat;Zuschlag;Total\n";
-  c.querySelectorAll("tbody tr").forEach(tr=>{
-   const n=tr.querySelector(".n").value;
-   const r=tr.querySelector(".r").value;
-   if(n||r)
-    body+=`${n};${tr.querySelector(".y").value};${tr.querySelector(".g").value};${r};${tr.querySelector(".z").textContent};${tr.querySelector(".t").textContent}\n`;
-  });
-  body+="\n";
- });
- body+="SIEGER:\n"+winner.textContent;
- location.href=`mailto:${RESULT_EMAIL}?subject=${encodeURIComponent("Amtscup Resultat")}&body=${encodeURIComponent(body)}`;
-}
-
-function sendToGoogle(){
- const rows=[];
- document.querySelectorAll("#groups .card").forEach(c=>{
-  const gruppe=c.dataset.name;
-  c.querySelectorAll("tbody tr").forEach(tr=>{
-   const name=tr.querySelector(".n").value;
-   const r=tr.querySelector(".r").value;
-   if(!name&&!r) return;
-   rows.push({
-     gruppe,
-     name,
-     jahr:tr.querySelector(".y").value,
-     geraet:tr.querySelector(".g").value,
-     resultat:r,
-     zuschlag:tr.querySelector(".z").textContent,
-     total:tr.querySelector(".t").textContent
-   });
-  });
- });
- fetch(GOOGLE_URL,{
-  method:"POST",
-  headers:{"Content-Type":"application/json"},
-  body:JSON.stringify({chef:chef.value,email:email.value,rows})
- });
-}
-
+/* ================= START ================= */
 loadGroups();
 </script>
 </body>
