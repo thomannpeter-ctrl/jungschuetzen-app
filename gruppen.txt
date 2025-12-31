@@ -1,9 +1,4 @@
-1 Heim	1	J003	Bowil MS	Linde
-1 Gast	1	J007	Konolfingen SG	Rookies
-1 Gast	1	J021	Worb VSG	Löchli Schützen 1
-2 Heim	1	J020	Trimstein Eichi FS	Apollo
-2 Gast	1	J012	Oberdiessbach SG	Aeschlen Kanadier
-2 Gast	1	J015	Oberthal MS	Top-Gun
+
 3 Heim	1	J002	Bowil MS	Groggenmoos
 3 Gast	1	J013	Oberthal MS	Bösi Buebe
 3 Gast	1	J009	Linden FS	Blitzschütze
