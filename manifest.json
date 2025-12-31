@@ -1,0 +1,15 @@
+{
+  "name": "Jungschützen Amtscup",
+  "short_name": "Jungschützen",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#eef2f7",
+  "theme_color": "#1e3a8a",
+  "icons": [
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
