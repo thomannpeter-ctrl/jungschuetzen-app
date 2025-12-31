@@ -103,9 +103,9 @@ button{
 const RESULT_EMAIL = "thomannpeter@bluewin.ch";
 const state = {};
 
-/* Gruppenliste laden */
+/* 🔑 Gruppenliste laden – CACHE-BUSTING */
 async function loadGroups(){
- const r = await fetch("gruppen.txt");
+ const r = await fetch("gruppen.txt?v=" + Date.now());
  const list = (await r.text()).split(/\r?\n/).filter(Boolean);
 
  ["g1","g2","g3"].forEach(id=>{
