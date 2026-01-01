@@ -16,26 +16,42 @@
 *{box-sizing:border-box}
 body{font-family:system-ui,sans-serif;background:#eef2f7;margin:0}
 .container{max-width:1200px;margin:auto;padding:1rem}
+
 h1{color:#1e3a8a}
 h2{color:#1d4ed8}
+
 .card{
- background:#fff;border-radius:14px;
- padding:1rem;margin-bottom:1rem;
+ background:#fff;
+ border-radius:14px;
+ padding:1rem;
+ margin-bottom:1rem;
  box-shadow:0 4px 10px rgba(0,0,0,.08)
 }
+
 .row{display:flex;gap:.75rem;flex-wrap:wrap}
 .field{flex:1;min-width:220px}
 label{font-size:.8rem;font-weight:600}
 
 input,select{
- width:100%;padding:.45rem;
+ width:100%;
+ padding:.45rem;
  border-radius:8px;
  border:1px solid #cbd5f5;
  font-size:14px
 }
 
-table{width:100%;border-collapse:collapse;font-size:.85rem}
-th,td{border:1px solid #e5e7eb;padding:.35rem;text-align:center}
+table{
+ width:100%;
+ border-collapse:collapse;
+ font-size:.85rem
+}
+
+th,td{
+ border:1px solid #e5e7eb;
+ padding:.35rem;
+ text-align:center
+}
+
 th{background:#dbeafe}
 
 /* Spaltenbreiten mobilfreundlich */
@@ -44,10 +60,14 @@ td.year input{width:70px;text-align:center}
 td.res input{width:60px;text-align:center}
 
 button{
- border:none;border-radius:999px;
- padding:.9rem;font-size:1rem;
- cursor:pointer;background:#2563eb;
- color:white;width:100%
+ border:none;
+ border-radius:999px;
+ padding:.9rem;
+ font-size:1rem;
+ cursor:pointer;
+ background:#2563eb;
+ color:white;
+ width:100%
 }
 
 .winner-ok{
@@ -56,13 +76,14 @@ button{
  border-radius:12px;
  font-weight:700
 }
+
 .winner-none{
  background:#e5e7eb;
  padding:.7rem;
  border-radius:12px
 }
 
-/* ⚠️ Hinweisbox */
+/* Hinweisbox */
 .notice{
  background:#fff7ed;
  border:1px solid #fdba74;
@@ -81,8 +102,14 @@ button{
 <div class="card">
 <h2>1. Gruppenchef</h2>
 <div class="row">
- <div class="field"><label>Name *</label><input id="chef"></div>
- <div class="field"><label>E-Mail *</label><input id="email" type="email"></div>
+ <div class="field">
+  <label>Name *</label>
+  <input id="chef">
+ </div>
+ <div class="field">
+  <label>E-Mail *</label>
+  <input id="email" type="email">
+ </div>
 </div>
 </div>
 
@@ -102,7 +129,6 @@ button{
 <div id="winner" class="winner-none">–</div>
 </div>
 
-<!-- ⚠️ NEUER HINWEIS -->
 <div class="card notice">
 <strong>📸 Wichtig:</strong><br>
 Bitte <b>Foto oder Scan des ausgefüllten Standblattes</b><br>
@@ -119,7 +145,7 @@ Bitte <b>Foto oder Scan des ausgefüllten Standblattes</b><br>
 const RESULT_EMAIL = "thomannpeter@bluewin.ch";
 const state = {};
 
-/* 🔑 Gruppenliste laden – CACHE-BUSTING */
+/* Gruppenliste laden (Cache-Busting) */
 async function loadGroups(){
  const r = await fetch("gruppen.txt?v=" + Date.now());
  const list = (await r.text()).split(/\r?\n/).filter(Boolean);
@@ -165,10 +191,10 @@ function renderGroups(){
     <td class="name"><input value="${r.n||""}"></td>
     <td class="year"><input value="${r.y||""}"></td>
     <td class="res"><input value="${r.r||""}"></td>`;
-   const inputs = tr.querySelectorAll("input");
-   inputs[0].oninput = e => r.n = e.target.value;
-   inputs[1].oninput = e => r.y = e.target.value;
-   inputs[2].oninput = e => { r.r = e.target.value; updateSum(c,g); };
+   const i = tr.querySelectorAll("input");
+   i[0].oninput = e => r.n = e.target.value;
+   i[1].oninput = e => r.y = e.target.value;
+   i[2].oninput = e => { r.r = e.target.value; updateSum(c,g); };
    tb.appendChild(tr);
   });
 
@@ -179,8 +205,8 @@ function renderGroups(){
 }
 
 function updateSum(card,g){
- const s = g.rows.reduce((a,b)=>a+(+b.r||0),0);
- card.querySelector(".sum").textContent = s;
+ card.querySelector(".sum").textContent =
+  g.rows.reduce((a,b)=>a+(+b.r||0),0);
  calcWinner();
 }
 
@@ -189,14 +215,16 @@ function calcWinner(){
   .map(g=>({ n:g.name, t:g.rows.reduce((a,b)=>a+(+b.r||0),0) }))
   .filter(x=>x.t>0);
 
- if(arr.length<2){
-  winner.textContent="–";
-  winner.className="winner-none";
+ if(arr.length < 2){
+  winner.textContent = "–";
+  winner.className = "winner-none";
   return;
  }
 
  arr.sort((a,b)=>b.t-a.t);
- if(arr.length===2){
+ winner.className = "winner-ok";
+
+ if(arr.length === 2){
   winner.innerHTML =
    `🏆 Sieger: ${arr[0].n} (${arr[0].t})<br>`+
    `❌ Verlierer: ${arr[1].n} (${arr[1].t})`;
@@ -205,7 +233,6 @@ function calcWinner(){
    `🏆 Sieger: ${arr[0].n} & ${arr[1].n}<br>`+
    `❌ Verlierer: ${arr[2].n}`;
  }
- winner.className="winner-ok";
 }
 
 function sendResult(){
@@ -219,7 +246,7 @@ function sendResult(){
  }
 
  let body = "";
- body += "JUNGSCHÜTZEN AMTSCUP – RESULTAT\n\n";
+ body += "JUNGSCHUETZEN AMTSCUP – RESULTAT\n\n";
  body += "Gruppenchef: " + chef.value + "\n";
  body += "E-Mail: " + email.value + "\n\n";
 
@@ -228,33 +255,22 @@ function sendResult(){
   body += "Nr; Name; Jahrgang; Resultat\n";
   g.rows.forEach((r,i)=>{
    if(r.n || r.r){
-    body +=
-     (i+1)+"; "+(r.n||"")+"; "+(r.y||"")+"; "+(r.r||"0")+"\n";
+    body += (i+1)+"; "+(r.n||"")+"; "+(r.y||"")+"; "+(r.r||"0")+"\n";
    }
   });
-  const sum = g.rows.reduce((a,b)=>a+(+b.r||0),0);
-  body += "Summe Gruppe "+(idx+1)+": "+sum+"\n\n";
+  body += "Summe Gruppe " + (idx+1) + ": " +
+          g.rows.reduce((a,b)=>a+(+b.r||0),0) + "\n\n";
  });
 
- const arr = Object.values(state)
-  .map(g=>({n:g.name,t:g.rows.reduce((a,b)=>a+(+b.r||0),0)}))
-  .filter(x=>x.t>0)
-  .sort((a,b)=>b.t-a.t);
+ body += "HINWEIS: Bitte Standblatt-Foto / Scan dem E-Mail anhängen.\n";
 
- if(arr.length===2){
-  body += "Sieger: "+arr[0].n+" ("+arr[0].t+")\n";
-  body += "Verlierer: "+arr[1].n+" ("+arr[1].t+")\n";
- } else if(arr.length>=3){
-  body += "Sieger: "+arr[0].n+" & "+arr[1].n+"\n";
-  body += "Verlierer: "+arr[2].n+"\n";
- }
+ const mailto =
+  "mailto:" + RESULT_EMAIL +
+  "?subject=" + encodeURIComponent("Jungschuetzen Amtscup Resultat") +
+  "&body=" + encodeURIComponent(body);
 
- body += "\nHINWEIS: Bitte Standblatt-Foto / Scan dem E-Mail anhängen.\n";
-
- location.href =
-  "mailto:"+RESULT_EMAIL+
-  "?subject="+encodeURIComponent("Jungschützen Amtscup Resultat")+
-  "&body="+encodeURIComponent(body);
+ /* 🔑 PWA-sicher */
+ window.open(mailto, "_self");
 }
 
 loadGroups();
