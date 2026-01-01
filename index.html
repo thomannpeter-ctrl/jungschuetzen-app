@@ -61,6 +61,15 @@ button{
  padding:.7rem;
  border-radius:12px
 }
+
+/* ⚠️ Hinweisbox */
+.notice{
+ background:#fff7ed;
+ border:1px solid #fdba74;
+ border-radius:12px;
+ padding:.9rem;
+ font-size:.9rem
+}
 </style>
 </head>
 
@@ -91,6 +100,13 @@ button{
 <div class="card">
 <h2>Sieger</h2>
 <div id="winner" class="winner-none">–</div>
+</div>
+
+<!-- ⚠️ NEUER HINWEIS -->
+<div class="card notice">
+<strong>📸 Wichtig:</strong><br>
+Bitte <b>Foto oder Scan des ausgefüllten Standblattes</b><br>
+<b>manuell dem E-Mail anhängen</b>, bevor es gesendet wird.
 </div>
 
 <div class="card">
@@ -232,6 +248,8 @@ function sendResult(){
   body += "Sieger: "+arr[0].n+" & "+arr[1].n+"\n";
   body += "Verlierer: "+arr[2].n+"\n";
  }
+
+ body += "\nHINWEIS: Bitte Standblatt-Foto / Scan dem E-Mail anhängen.\n";
 
  location.href =
   "mailto:"+RESULT_EMAIL+
