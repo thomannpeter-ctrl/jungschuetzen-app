@@ -1,5 +1,4 @@
-1 Heim	2	J010	Oberdiessbach SG	Bierfront
-1 Gast	2	J014	Oberthal MS	Sabrina
+
 2 Heim	2	J018	Trimstein Eichi FS	Artemis
 2 Gast	2	J009	Linden FS	Blitzschütze
 3 Heim	2	J013	Oberthal MS	Bösi Buebe
