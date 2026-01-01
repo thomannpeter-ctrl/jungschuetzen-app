@@ -1,10 +1,4 @@
 
-3 Heim	1	J002	Bowil MS	Groggenmoos
-3 Gast	1	J013	Oberthal MS	Bösi Buebe
-3 Gast	1	J009	Linden FS	Blitzschütze
-4 Heim	1	J011	Obediessbach SG	U15
-4 Gast	1	J017	Trimstein Eichi FS	Tagediebe
-4 Gast	1	J004	Bowil MS	Chläberli
 5 Heim	1	J008	Konolfingen SG	Fadegrad
 5 Gast	1	J018	Trimstein Eichi FS	Artemis
 5 Gast	1	J005	Falkenfluh-Schützen	Hunters
