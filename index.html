@@ -77,7 +77,7 @@ Bitte <b>Foto oder Scan des ausgefüllten Standblattes</b><br>
 
 <script>
 const RESULT_EMAIL = "thomannpeter@bluewin.ch";
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzoDg8ZkU7PC7VrqZFsEQY0HqAtGT57PaL0zFTf4dIczMX5ab4sS5kPEE82UVO4Gvxm/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxoZodXSIV15V2xhk67Proxyml6dU9QYGDnWxWgAYi6Xe3pjePyJCM-lNj4A17YpNh7/exec";
 const state = {};
 
 async function loadGroups(){
@@ -202,14 +202,15 @@ function sendResult(){
 
  body += "HINWEIS: Bitte Standblatt-Foto / Scan dem E-Mail anhängen.\n";
 
- // 👉 In Google-Tabelle senden
  fetch(SCRIPT_URL, {
   method: "POST",
   headers: {"Content-Type":"application/json"},
-  body: JSON.stringify({rows: rowsForGoogle})
- }).catch(()=>{});
+  body: JSON.stringify({ rows: rowsForGoogle })
+ })
+ .then(r => r.text())
+ .then(t => alert("Google-Antwort: " + t))
+ .catch(e => alert("Google-Fehler: " + e));
 
- // 👉 Mail öffnen wie bisher
  const mailto =
   "mailto:" + RESULT_EMAIL +
   "?subject=" + encodeURIComponent("Jungschuetzen Amtscup Resultat") +
