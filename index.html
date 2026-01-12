@@ -5,92 +5,30 @@
 <title>Jungschützen Amtscup</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- PWA -->
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=1">
-<link rel="icon" href="apple-touch-icon.png?v=1">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1e3a8a">
 
 <style>
 *{box-sizing:border-box}
 body{font-family:system-ui,sans-serif;background:#eef2f7;margin:0}
 .container{max-width:1200px;margin:auto;padding:1rem}
-
 h1{color:#1e3a8a}
 h2{color:#1d4ed8}
-
-.card{
- background:#fff;
- border-radius:14px;
- padding:1rem;
- margin-bottom:1rem;
- box-shadow:0 4px 10px rgba(0,0,0,.08)
-}
-
+.card{background:#fff;border-radius:14px;padding:1rem;margin-bottom:1rem;box-shadow:0 4px 10px rgba(0,0,0,.08)}
 .row{display:flex;gap:.75rem;flex-wrap:wrap}
 .field{flex:1;min-width:220px}
 label{font-size:.8rem;font-weight:600}
-
-input,select{
- width:100%;
- padding:.45rem;
- border-radius:8px;
- border:1px solid #cbd5f5;
- font-size:14px
-}
-
-table{
- width:100%;
- border-collapse:collapse;
- font-size:.85rem
-}
-
-th,td{
- border:1px solid #e5e7eb;
- padding:.35rem;
- text-align:center
-}
-
+input,select{width:100%;padding:.45rem;border-radius:8px;border:1px solid #cbd5f5;font-size:14px}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{border:1px solid #e5e7eb;padding:.35rem;text-align:center}
 th{background:#dbeafe}
-
-/* Spaltenbreiten mobilfreundlich */
 td.name input{width:100%}
 td.year input{width:70px;text-align:center}
 td.res input{width:60px;text-align:center}
-
-button{
- border:none;
- border-radius:999px;
- padding:.9rem;
- font-size:1rem;
- cursor:pointer;
- background:#2563eb;
- color:white;
- width:100%
-}
-
-.winner-ok{
- background:#dcfce7;
- padding:.7rem;
- border-radius:12px;
- font-weight:700
-}
-
-.winner-none{
- background:#e5e7eb;
- padding:.7rem;
- border-radius:12px
-}
-
-/* Hinweisbox */
-.notice{
- background:#fff7ed;
- border:1px solid #fdba74;
- border-radius:12px;
- padding:.9rem;
- font-size:.9rem
-}
+button{border:none;border-radius:999px;padding:.9rem;font-size:1rem;cursor:pointer;background:#2563eb;color:white;width:100%}
+.winner-ok{background:#dcfce7;padding:.7rem;border-radius:12px;font-weight:700}
+.winner-none{background:#e5e7eb;padding:.7rem;border-radius:12px}
+.notice{background:#fff7ed;border:1px solid #fdba74;border-radius:12px;padding:.9rem;font-size:.9rem}
 </style>
 </head>
 
@@ -100,21 +38,17 @@ button{
 <h1>Jungschützen Amtscup</h1>
 
 <div class="card">
-<h2>1. Gruppenchef</h2>
-<div class="row">
- <div class="field">
-  <label>Name *</label>
-  <input id="chef">
- </div>
- <div class="field">
-  <label>E-Mail *</label>
-  <input id="email" type="email">
- </div>
-</div>
+<h2>Anleitung</h2>
+<p>
+Du kannst eine oder zwei Gruppen melden, bei 3er Paarungen alle 3 Gruppen möglich.<br>
+Mindestens eine Gruppe muss komplett ausgefüllt sein.<br>
+Nach dem Senden dem Mail das Standblatt als Datei oder Bild anhängen.
+</p>
+<p>🔥 Danke für das Melden der Resultate über diese App</p>
 </div>
 
 <div class="card">
-<h2>2. Gruppenauswahl</h2>
+<h2>1. Gruppenauswahl</h2>
 <div class="row">
  <div class="field"><label>Gruppe 1 *</label><select id="g1"></select></div>
  <div class="field"><label>Gruppe 2</label><select id="g2"></select></div>
@@ -145,10 +79,16 @@ Bitte <b>Foto oder Scan des ausgefüllten Standblattes</b><br>
 const RESULT_EMAIL = "thomannpeter@bluewin.ch";
 const state = {};
 
-/* Gruppenliste laden (Cache-Busting) */
+// Gruppen laden mit Fallback
 async function loadGroups(){
- const r = await fetch("gruppen.txt?v=" + Date.now());
- const list = (await r.text()).split(/\r?\n/).filter(Boolean);
+ let list = [];
+ try{
+  const r = await fetch("gruppen.txt?v=" + Date.now());
+  if(!r.ok) throw "Fehlt";
+  list = (await r.text()).split(/\r?\n/).filter(Boolean);
+ }catch(e){
+  list = ["Gruppe 1","Gruppe 2","Gruppe 3"];
+ }
 
  ["g1","g2","g3"].forEach(id=>{
   const s = document.getElementById(id);
@@ -174,13 +114,9 @@ function renderGroups(){
   c.innerHTML = `
    <h2>Schützen – Gruppe ${i+1}: ${g.name}</h2>
    <table>
-    <thead>
-     <tr><th>#</th><th>Name</th><th>Jahrgang</th><th>Resultat</th></tr>
-    </thead>
+    <thead><tr><th>#</th><th>Name</th><th>Jahrgang</th><th>Resultat</th></tr></thead>
     <tbody></tbody>
-    <tfoot>
-     <tr><th colspan="3">Summe</th><th class="sum">0</th></tr>
-    </tfoot>
+    <tfoot><tr><th colspan="3">Summe</th><th class="sum">0</th></tr></tfoot>
    </table>`;
   const tb = c.querySelector("tbody");
 
@@ -225,31 +161,19 @@ function calcWinner(){
  winner.className = "winner-ok";
 
  if(arr.length === 2){
-  winner.innerHTML =
-   `🏆 Sieger: ${arr[0].n} (${arr[0].t})<br>`+
-   `❌ Verlierer: ${arr[1].n} (${arr[1].t})`;
+  winner.innerHTML = `🏆 Sieger: ${arr[0].n} (${arr[0].t})<br>❌ Verlierer: ${arr[1].n} (${arr[1].t})`;
  } else {
-  winner.innerHTML =
-   `🏆 Sieger: ${arr[0].n} & ${arr[1].n}<br>`+
-   `❌ Verlierer: ${arr[2].n}`;
+  winner.innerHTML = `🏆 Sieger: ${arr[0].n} & ${arr[1].n}<br>❌ Verlierer: ${arr[2].n}`;
  }
 }
 
 function sendResult(){
- if(!chef.value || !email.value){
-  alert("Name und E-Mail sind Pflichtfelder.");
-  return;
- }
  if(!Object.keys(state).length){
   alert("Mindestens eine Gruppe wählen.");
   return;
  }
 
- let body = "";
- body += "JUNGSCHUETZEN AMTSCUP – RESULTAT\n\n";
- body += "Gruppenchef: " + chef.value + "\n";
- body += "E-Mail: " + email.value + "\n\n";
-
+ let body = "JUNGSCHUETZEN AMTSCUP – RESULTAT\n\n";
  Object.values(state).forEach((g,idx)=>{
   body += "GRUPPE " + (idx+1) + ": " + g.name + "\n";
   body += "Nr; Name; Jahrgang; Resultat\n";
@@ -269,7 +193,6 @@ function sendResult(){
   "?subject=" + encodeURIComponent("Jungschuetzen Amtscup Resultat") +
   "&body=" + encodeURIComponent(body);
 
- /* 🔑 PWA-sicher */
  window.open(mailto, "_self");
 }
 
