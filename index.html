@@ -202,21 +202,26 @@ function sendResult(){
 
  body += "HINWEIS: Bitte Standblatt-Foto / Scan dem E-Mail anhängen.\n";
 
+ const mailto =
+  "mailto:" + RESULT_EMAIL +
+  "?subject=" + encodeURIComponent("Jungschuetzen Amtscup Resultat") +
+  "&body=" + encodeURIComponent(body);
+
+ // Zuerst Google senden
  fetch(SCRIPT_URL, {
   method: "POST",
   headers: {"Content-Type":"application/json"},
   body: JSON.stringify({ rows: rowsForGoogle })
  })
  .then(r => r.text())
- .then(t => alert("Google-Antwort: " + t))
- .catch(e => alert("Google-Fehler: " + e));
-
- const mailto =
-  "mailto:" + RESULT_EMAIL +
-  "?subject=" + encodeURIComponent("Jungschuetzen Amtscup Resultat") +
-  "&body=" + encodeURIComponent(body);
-
- window.open(mailto, "_self");
+ .then(t => {
+   alert("Google-Antwort: " + t);
+   window.open(mailto, "_blank");
+ })
+ .catch(e => {
+   alert("Google-Fehler: " + e);
+   window.open(mailto, "_blank");
+ });
 }
 
 loadGroups();
