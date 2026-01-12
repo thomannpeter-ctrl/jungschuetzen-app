@@ -77,6 +77,7 @@ Bitte <b>Foto oder Scan des ausgefüllten Standblattes</b><br>
 
 <script>
 const RESULT_EMAIL = "thomannpeter@bluewin.ch";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxPnJ-RYvh3A18ih73isEPWQ1NNRf_ODeHIHmGJY_qDbdpjaPaMv8ukVZ7dt5MDfGZK/exec";
 const state = {};
 
 async function loadGroups(){
@@ -175,23 +176,45 @@ function sendResult(){
   alert("Mindestens eine Gruppe wählen.");
   return;
  }
+
+ let rowsForGoogle = [];
  let body = "JUNGSCHUETZEN AMTSCUP – RESULTAT\n\n";
+
  Object.values(state).forEach((g,idx)=>{
   body += "GRUPPE " + (idx+1) + ": " + g.name + "\n";
   body += "Nr; Name; Jahrgang; Gender; Resultat\n";
   g.rows.forEach((r,i)=>{
    if(r.n || r.r){
     body += (i+1)+"; "+(r.n||"")+"; "+(r.y||"")+"; "+(r.g||"")+"; "+(r.r||"0")+"\n";
+    rowsForGoogle.push({
+      gruppe: g.name,
+      nr: i+1,
+      name: r.n||"",
+      jahrgang: r.y||"",
+      gender: r.g||"",
+      resultat: r.r||"0"
+    });
    }
   });
   body += "Summe Gruppe " + (idx+1) + ": " +
           g.rows.reduce((a,b)=>a+(+b.r||0),0) + "\n\n";
  });
+
  body += "HINWEIS: Bitte Standblatt-Foto / Scan dem E-Mail anhängen.\n";
+
+ // 👉 In Google-Tabelle senden
+ fetch(SCRIPT_URL, {
+  method: "POST",
+  headers: {"Content-Type":"application/json"},
+  body: JSON.stringify({rows: rowsForGoogle})
+ }).catch(()=>{});
+
+ // 👉 Mail öffnen wie bisher
  const mailto =
   "mailto:" + RESULT_EMAIL +
   "?subject=" + encodeURIComponent("Jungschuetzen Amtscup Resultat") +
   "&body=" + encodeURIComponent(body);
+
  window.open(mailto, "_self");
 }
 
