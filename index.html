@@ -63,10 +63,9 @@ pre{white-space:pre-wrap;font-size:.85rem;background:#f1f5f9;padding:1rem;border
 
 <script>
 const RESULT_EMAIL = "thomannpeter@bluewin.ch";
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzJTDiZlMn6zOTO1nGFnBY0oSDVKcMK26S8RamOG0M8MFCkN32nqJDbKUVinF-Vghj6/exec";  // ← einsetzen!
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxbYk7pwn6JpTkzkX3iVAnqBD2yI-z3aVWkuMWst2DwkxTkAX_WfiFiNTNOMvwZ_z9/exec"; // einsetzen!
 const state = {};
 
-// Gruppen laden
 async function loadGroups(){
  let list = [];
  try{
@@ -151,23 +150,45 @@ function calcWinner(){
 }
 
 function submitResult(){
- let text = "JUNGSCHÜTZEN AMTSCUP – RESULTAT\n\n";
+ let mailText = "JUNGSCHÜTZEN AMTSCUP – RESULTAT\n\n";
  let payload = [];
+
  Object.values(state).forEach((g,idx)=>{
   const sum = g.rows.reduce((a,b)=>a+(+b.r||0),0);
+  mailText += "GRUPPE " + (idx+1) + ": " + g.name + "\n";
+  mailText += "Nr; Name; Jahrgang; Gender; Resultat\n";
   g.rows.forEach((r,i)=>{
    if(r.n || r.r){
+    mailText +=
+     (i+1)+"; "+
+     (r.n||"")+"; "+
+     (r.y||"")+"; "+
+     (r.g||"")+"; "+
+     (r.r||"0")+"\n";
     payload.push({
-      gruppe:g.name,nr:i+1,name:r.n||"",jahrgang:r.y||"",gender:r.g||"",resultat:r.r||0,gruppenSumme:sum
+      gruppe:g.name,
+      nr:i+1,
+      name:r.n||"",
+      jahrgang:r.y||"",
+      gender:r.g||"",
+      resultat:r.r||0,
+      gruppenSumme:sum
     });
    }
   });
+  mailText += "Summe: " + sum + "\n\n";
  });
 
- // Mail
- window.open("mailto:"+RESULT_EMAIL+"?subject=Resultat&body="+encodeURIComponent(text));
+ document.getElementById("output").textContent = mailText;
 
- // FORM-POST an Google Script
+ // Mail
+ window.open(
+  "mailto:"+RESULT_EMAIL+
+  "?subject="+encodeURIComponent("Jungschützen Amtscup Resultat")+
+  "&body="+encodeURIComponent(mailText)
+ );
+
+ // Formular-POST an Google Script
  const form = document.createElement("form");
  form.method="POST";
  form.action=GOOGLE_SCRIPT_URL;
@@ -184,18 +205,3 @@ loadGroups();
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-ChatGPT kann Fehler machen. Überprüfe wichtige Informationen. Sieh
