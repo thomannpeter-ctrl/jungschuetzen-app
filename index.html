@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <title>Jungschützen Amtscup</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1e3a8a">
 
 <style>
 *{box-sizing:border-box}
@@ -28,7 +26,7 @@ td.res input{width:60px;text-align:center}
 button{border:none;border-radius:999px;padding:.9rem;font-size:1rem;cursor:pointer;background:#2563eb;color:white;width:100%}
 .winner-ok{background:#dcfce7;padding:.7rem;border-radius:12px;font-weight:700}
 .winner-none{background:#e5e7eb;padding:.7rem;border-radius:12px}
-.notice{background:#fff7ed;border:1px solid #fdba74;border-radius:12px;padding:.9rem;font-size:.9rem}
+pre{white-space:pre-wrap;font-size:.85rem;background:#f1f5f9;padding:1rem;border-radius:12px}
 </style>
 </head>
 
@@ -36,16 +34,6 @@ button{border:none;border-radius:999px;padding:.9rem;font-size:1rem;cursor:point
 <div class="container">
 
 <h1>Jungschützen Amtscup</h1>
-
-<div class="card">
-<h2>Anleitung</h2>
-<p>
-Du kannst eine oder zwei Gruppen melden, bei 3er Paarungen alle 3 Gruppen möglich.<br>
-Mindestens eine Gruppe muss komplett ausgefüllt sein.<br>
-Nach dem Senden dem Mail das Standblatt als Datei oder Bild anhängen.
-</p>
-<p>🔥 Danke für das Melden der Resultate über diese App</p>
-</div>
 
 <div class="card">
 <h2>1. Gruppenauswahl</h2>
@@ -63,31 +51,24 @@ Nach dem Senden dem Mail das Standblatt als Datei oder Bild anhängen.
 <div id="winner" class="winner-none">–</div>
 </div>
 
-<div class="card notice">
-<strong>📸 Wichtig:</strong><br>
-Bitte <b>Foto oder Scan des ausgefüllten Standblattes</b><br>
-<b>manuell dem E-Mail anhängen</b>, bevor es gesendet wird.
+<div class="card">
+<button onclick="submitResult()">🔵 Resultat übermitteln</button>
 </div>
 
 <div class="card">
-<button onclick="sendResult()">📧 Resultat per Mail senden</button>
+<h2>Übermitteltes Resultat</h2>
+<pre id="output">Noch kein Resultat übermittelt.</pre>
 </div>
 
 </div>
 
 <script>
-const RESULT_EMAIL = "thomannpeter@bluewin.ch";
+const RESULT_EMAIL = "DEINE_MAIL@DOMAIN.CH";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxoCi7IjSQi9oeGRrx85iYmaIdNleiOTcDdgVZ9wwmf6NwzDgjImvk42TVJq2Dbxf2N/exec";
 const state = {};
 
 async function loadGroups(){
- let list = [];
- try{
-  const r = await fetch("gruppen.txt?v=" + Date.now());
-  if(!r.ok) throw "Fehlt";
-  list = (await r.text()).split(/\r?\n/).filter(Boolean);
- }catch(e){
-  list = ["Gruppe 1","Gruppe 2","Gruppe 3"];
- }
+ let list = ["Gruppe A","Gruppe B","Gruppe C"];
  ["g1","g2","g3"].forEach(id=>{
   const s = document.getElementById(id);
   s.innerHTML = "<option value=''>Bitte wählen…</option>";
@@ -156,43 +137,67 @@ function calcWinner(){
  const arr = Object.values(state)
   .map(g=>({ n:g.name, t:g.rows.reduce((a,b)=>a+(+b.r||0),0) }))
   .filter(x=>x.t>0);
+
  if(arr.length < 2){
   winner.textContent = "–";
   winner.className = "winner-none";
   return;
  }
+
  arr.sort((a,b)=>b.t-a.t);
  winner.className = "winner-ok";
- if(arr.length === 2){
-  winner.innerHTML = `🏆 Sieger: ${arr[0].n} (${arr[0].t})<br>❌ Verlierer: ${arr[1].n} (${arr[1].t})`;
- } else {
-  winner.innerHTML = `🏆 Sieger: ${arr[0].n} & ${arr[1].n}<br>❌ Verlierer: ${arr[2].n}`;
- }
+
+ let html = `🏆 Sieger: ${arr[0].n} (${arr[0].t})<br>`;
+ if(arr[1]) html += `🥈 Zweiter: ${arr[1].n} (${arr[1].t})<br>`;
+ if(arr[2]) html += `🥉 Dritter: ${arr[2].n} (${arr[2].t})`;
+ winner.innerHTML = html;
 }
 
-function sendResult(){
+function submitResult(){
  if(!Object.keys(state).length){
   alert("Mindestens eine Gruppe wählen.");
   return;
  }
- let body = "JUNGSCHUETZEN AMTSCUP – RESULTAT\n\n";
+
+ let text = "JUNGSCHÜTZEN AMTSCUP – RESULTAT\n\n";
+ let payload = [];
+
  Object.values(state).forEach((g,idx)=>{
-  body += "GRUPPE " + (idx+1) + ": " + g.name + "\n";
-  body += "Nr; Name; Jahrgang; Gender; Resultat\n";
+  const sum = g.rows.reduce((a,b)=>a+(+b.r||0),0);
+  text += "GRUPPE " + (idx+1) + ": " + g.name + "\n";
+  text += "Nr; Name; Jahrgang; Gender; Resultat\n";
   g.rows.forEach((r,i)=>{
    if(r.n || r.r){
-    body += (i+1)+"; "+(r.n||"")+"; "+(r.y||"")+"; "+(r.g||"")+"; "+(r.r||"0")+"\n";
+    text += (i+1)+"; "+(r.n||"")+"; "+(r.y||"")+"; "+(r.g||"")+"; "+(r.r||"0")+"\n";
+    payload.push({
+      gruppe: g.name,
+      nr: i+1,
+      name: r.n||"",
+      jahrgang: r.y||"",
+      gender: r.g||"",
+      resultat: r.r||0,
+      gruppenSumme: sum
+    });
    }
   });
-  body += "Summe Gruppe " + (idx+1) + ": " +
-          g.rows.reduce((a,b)=>a+(+b.r||0),0) + "\n\n";
+  text += "Summe: " + sum + "\n\n";
  });
- body += "HINWEIS: Bitte Standblatt-Foto / Scan dem E-Mail anhängen.\n";
+
+ document.getElementById("output").textContent = text;
+
+ // 1) Mail öffnen
  const mailto =
   "mailto:" + RESULT_EMAIL +
-  "?subject=" + encodeURIComponent("Jungschuetzen Amtscup Resultat") +
-  "&body=" + encodeURIComponent(body);
+  "?subject=" + encodeURIComponent("Jungschützen Amtscup Resultat") +
+  "&body=" + encodeURIComponent(text);
  window.open(mailto, "_self");
+
+ // 2) In Google Tabelle senden
+ fetch(GOOGLE_SCRIPT_URL,{
+  method:"POST",
+  headers:{ "Content-Type":"application/json" },
+  body: JSON.stringify({ daten: payload, zeit: new Date().toISOString() })
+ }).catch(err=>console.error("Google Fehler:",err));
 }
 
 loadGroups();
