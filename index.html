@@ -34,6 +34,17 @@ pre{white-space:pre-wrap;font-size:.85rem;background:#f1f5f9;padding:1rem;border
 
 <h1>Jungschützen Amtscup</h1>
 
+<!-- Anleitung oberhalb der Gruppenauswahl -->
+<div class="card">
+<h2>Anleitung</h2>
+<p>
+Du kannst eine oder zwei Gruppen melden, bei 3er Paarungen alle 3 Gruppen möglich.<br>
+Mindestens eine Gruppe muss komplett ausgefüllt sein.<br>
+Nach dem Senden dem Mail das Standblatt als Datei oder Bild anhängen.
+</p>
+<p>🔥 Danke für das Melden der Resultate über diese App</p>
+</div>
+
 <div class="card">
 <h2>1. Gruppenauswahl</h2>
 <div class="row">
@@ -63,7 +74,7 @@ pre{white-space:pre-wrap;font-size:.85rem;background:#f1f5f9;padding:1rem;border
 
 <script>
 const RESULT_EMAIL = "thomannpeter@bluewin.ch";
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxbYk7pwn6JpTkzkX3iVAnqBD2yI-z3aVWkuMWst2DwkxTkAX_WfiFiNTNOMvwZ_z9/exec"; // einsetzen!
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxbYk7pwn6JpTkzkX3iVAnqBD2yI-z3aVWkuMWst2DwkxTkAX_WfiFiNTNOMvwZ_z9/exec";
 const state = {};
 
 async function loadGroups(){
@@ -87,6 +98,7 @@ function selectGroup(id){
  const name = document.getElementById(id).value;
  if(!name) return;
  if(!state[id]) state[id] = { name, rows:[{},{},{},{}] };
+ else state[id].name = name;   // Name aktualisieren, Daten behalten
  renderGroups();
 }
 
@@ -109,10 +121,16 @@ function renderGroups(){
    const tr = document.createElement("tr");
    tr.innerHTML = `
     <td>${idx+1}</td>
-    <td class="name"><input></td>
-    <td class="year"><input></td>
-    <td class="gender"><select><option></option><option value="m">m</option><option value="w">w</option></select></td>
-    <td class="res"><input></td>`;
+    <td class="name"><input value="${r.n||""}"></td>
+    <td class="year"><input value="${r.y||""}"></td>
+    <td class="gender">
+      <select>
+        <option value=""></option>
+        <option value="m" ${r.g==="m"?"selected":""}>m</option>
+        <option value="w" ${r.g==="w"?"selected":""}>w</option>
+      </select>
+    </td>
+    <td class="res"><input value="${r.r||""}"></td>`;
    const i = tr.querySelectorAll("input,select");
    i[0].oninput = e => r.n = e.target.value;
    i[1].oninput = e => r.y = e.target.value;
@@ -181,14 +199,12 @@ function submitResult(){
 
  document.getElementById("output").textContent = mailText;
 
- // Mail
  window.open(
   "mailto:"+RESULT_EMAIL+
   "?subject="+encodeURIComponent("Jungschützen Amtscup Resultat")+
   "&body="+encodeURIComponent(mailText)
  );
 
- // Formular-POST an Google Script
  const form = document.createElement("form");
  form.method="POST";
  form.action=GOOGLE_SCRIPT_URL;
