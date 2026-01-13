@@ -1,10 +1,9 @@
-<!doctype html> 
+<!doctype html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <title>Jungschützen Amtscup</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
 *{box-sizing:border-box}
 body{font-family:system-ui,sans-serif;background:#eef2f7;margin:0}
@@ -64,10 +63,10 @@ pre{white-space:pre-wrap;font-size:.85rem;background:#f1f5f9;padding:1rem;border
 
 <script>
 const RESULT_EMAIL = "thomannpeter@bluewin.ch";
-const GOOGLE_SCRIPT_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLjWPXDXbyda1dwia9rimPnT6MaqFcS_XSgR5rsjS7w3cNuKVxEKc8CAsrbw1F7azyOKHxJ7w4GbcWuEuwEfZb5r_-hWeqxp7xVpVKcvgShaHBTwTA2AVfd3974b_tQfv7N97pxbu5QAaMARNeoF3DoqpegXwh_fonobI49wJhbegf7srPVvH-88ULmSR_1H1oaqYeB7Ak8jsBXB_kzFS6j7GfCzaNEeI5_f9mqBU0Vot8POfOhP3RDC1ARflnAvY4NOw-_Gv16AVPV3u_ntNzfdHZVmaw&lib=MB_hx5yrXiQzNv-jtjvTHKTwA45j9qxtE";
+const GOOGLE_SCRIPT_URL = "HIER_DEINE_googleusercontent_URL";  // ← einsetzen!
 const state = {};
 
-// Gruppen aus gruppen.txt laden
+// Gruppen laden
 async function loadGroups(){
  let list = [];
  try{
@@ -75,10 +74,8 @@ async function loadGroups(){
   if(!r.ok) throw "Fehlt";
   list = (await r.text()).split(/\r?\n/).filter(Boolean);
  }catch(e){
-  alert("gruppen.txt nicht gefunden – Fallback auf Gruppe A/B/C");
   list = ["Gruppe A","Gruppe B","Gruppe C"];
  }
-
  ["g1","g2","g3"].forEach(id=>{
   const s = document.getElementById(id);
   s.innerHTML = "<option value=''>Bitte wählen…</option>";
@@ -113,16 +110,10 @@ function renderGroups(){
    const tr = document.createElement("tr");
    tr.innerHTML = `
     <td>${idx+1}</td>
-    <td class="name"><input value="${r.n||""}"></td>
-    <td class="year"><input value="${r.y||""}"></td>
-    <td class="gender">
-      <select>
-        <option value=""></option>
-        <option value="m">m</option>
-        <option value="w">w</option>
-      </select>
-    </td>
-    <td class="res"><input value="${r.r||""}"></td>`;
+    <td class="name"><input></td>
+    <td class="year"><input></td>
+    <td class="gender"><select><option></option><option value="m">m</option><option value="w">w</option></select></td>
+    <td class="res"><input></td>`;
    const i = tr.querySelectorAll("input,select");
    i[0].oninput = e => r.n = e.target.value;
    i[1].oninput = e => r.y = e.target.value;
@@ -130,7 +121,6 @@ function renderGroups(){
    i[3].oninput = e => { r.r = e.target.value; updateSum(c,g); };
    tb.appendChild(tr);
   });
-
   groups.appendChild(c);
   updateSum(c,g);
  });
@@ -147,16 +137,13 @@ function calcWinner(){
  const arr = Object.values(state)
   .map(g=>({ n:g.name, t:g.rows.reduce((a,b)=>a+(+b.r||0),0) }))
   .filter(x=>x.t>0);
-
  if(arr.length < 2){
   winner.textContent = "–";
   winner.className = "winner-none";
   return;
  }
-
  arr.sort((a,b)=>b.t-a.t);
  winner.className = "winner-ok";
-
  let html = `🏆 Sieger: ${arr[0].n} (${arr[0].t})<br>`;
  if(arr[1]) html += `🥈 Zweiter: ${arr[1].n} (${arr[1].t})<br>`;
  if(arr[2]) html += `🥉 Dritter: ${arr[2].n} (${arr[2].t})`;
@@ -164,56 +151,51 @@ function calcWinner(){
 }
 
 function submitResult(){
- if(!Object.keys(state).length){
-  alert("Mindestens eine Gruppe wählen.");
-  return;
- }
-
  let text = "JUNGSCHÜTZEN AMTSCUP – RESULTAT\n\n";
  let payload = [];
-
  Object.values(state).forEach((g,idx)=>{
   const sum = g.rows.reduce((a,b)=>a+(+b.r||0),0);
-  text += "GRUPPE " + (idx+1) + ": " + g.name + "\n";
-  text += "Nr; Name; Jahrgang; Gender; Resultat\n";
   g.rows.forEach((r,i)=>{
    if(r.n || r.r){
-    text += (i+1)+"; "+(r.n||"")+"; "+(r.y||"")+"; "+(r.g||"")+"; "+(r.r||"0")+"\n";
     payload.push({
-      gruppe: g.name,
-      nr: i+1,
-      name: r.n||"",
-      jahrgang: r.y||"",
-      gender: r.g||"",
-      resultat: r.r||0,
-      gruppenSumme: sum
+      gruppe:g.name,nr:i+1,name:r.n||"",jahrgang:r.y||"",gender:r.g||"",resultat:r.r||0,gruppenSumme:sum
     });
    }
   });
-  text += "Summe: " + sum + "\n\n";
  });
 
- document.getElementById("output").textContent = text;
+ // Mail
+ window.open("mailto:"+RESULT_EMAIL+"?subject=Resultat&body="+encodeURIComponent(text));
 
- // Mail öffnen
- const mailto =
-  "mailto:" + RESULT_EMAIL +
-  "?subject=" + encodeURIComponent("Jungschützen Amtscup Resultat") +
-  "&body=" + encodeURIComponent(text);
- window.open(mailto, "_self");
-
- // Google Tabelle
- fetch(GOOGLE_SCRIPT_URL,{
-  method:"POST",
-  headers:{ "Content-Type":"application/json" },
-  body: JSON.stringify({ daten: payload, zeit: new Date().toISOString() })
- })
- .then(r=>r.text())
- .then(t=>console.log("Google Antwort:",t))
- .catch(err=>console.error("Google Fehler:",err));
+ // FORM-POST an Google Script
+ const form = document.createElement("form");
+ form.method="POST";
+ form.action=GOOGLE_SCRIPT_URL;
+ const inp = document.createElement("input");
+ inp.type="hidden";
+ inp.name="data";
+ inp.value=JSON.stringify({ daten: payload, zeit: new Date().toISOString() });
+ form.appendChild(inp);
+ document.body.appendChild(form);
+ form.submit();
 }
 
 loadGroups();
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ChatGPT kann Fehler machen. Überprüfe wichtige Informationen. Sieh
