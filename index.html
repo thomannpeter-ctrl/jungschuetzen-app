@@ -64,11 +64,21 @@ pre{white-space:pre-wrap;font-size:.85rem;background:#f1f5f9;padding:1rem;border
 
 <script>
 const RESULT_EMAIL = "DEINE_MAIL@DOMAIN.CH";
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxoCi7IjSQi9oeGRrx85iYmaIdNleiOTcDdgVZ9wwmf6NwzDgjImvk42TVJq2Dbxf2N/exec";
+const GOOGLE_SCRIPT_URL = "HIER_DEINE_SCRIPT_URL_EINFÜGEN";
 const state = {};
 
+// Gruppen aus gruppen.txt laden
 async function loadGroups(){
- let list = ["Gruppe A","Gruppe B","Gruppe C"];
+ let list = [];
+ try{
+  const r = await fetch("gruppen.txt?v=" + Date.now());
+  if(!r.ok) throw "Fehlt";
+  list = (await r.text()).split(/\r?\n/).filter(Boolean);
+ }catch(e){
+  alert("gruppen.txt nicht gefunden – Fallback auf Gruppe A/B/C");
+  list = ["Gruppe A","Gruppe B","Gruppe C"];
+ }
+
  ["g1","g2","g3"].forEach(id=>{
   const s = document.getElementById(id);
   s.innerHTML = "<option value=''>Bitte wählen…</option>";
@@ -185,14 +195,14 @@ function submitResult(){
 
  document.getElementById("output").textContent = text;
 
- // 1) Mail öffnen
+ // Mail öffnen
  const mailto =
   "mailto:" + RESULT_EMAIL +
   "?subject=" + encodeURIComponent("Jungschützen Amtscup Resultat") +
   "&body=" + encodeURIComponent(text);
  window.open(mailto, "_self");
 
- // 2) In Google Tabelle senden
+ // Google Tabelle
  fetch(GOOGLE_SCRIPT_URL,{
   method:"POST",
   headers:{ "Content-Type":"application/json" },
