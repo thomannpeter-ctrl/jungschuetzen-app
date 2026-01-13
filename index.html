@@ -1,4 +1,4 @@
-<!doctype html>
+<!doctype html> 
 <html lang="de">
 <head>
 <meta charset="UTF-8">
@@ -64,7 +64,7 @@ pre{white-space:pre-wrap;font-size:.85rem;background:#f1f5f9;padding:1rem;border
 
 <script>
 const RESULT_EMAIL = "thomannpeter@bluewin.ch";
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxoCi7IjSQi9oeGRrx85iYmaIdNleiOTcDdgVZ9wwmf6NwzDgjImvk42TVJq2Dbxf2N/exec";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxnZHVXJqQtcuNDi4_-_-QuuUGyM0hhWlQs2Y5CyQj_B-KirdCw-1oTfD0eKQLhOcg/exec";
 const state = {};
 
 // Gruppen aus gruppen.txt laden
@@ -207,7 +207,10 @@ function submitResult(){
   method:"POST",
   headers:{ "Content-Type":"application/json" },
   body: JSON.stringify({ daten: payload, zeit: new Date().toISOString() })
- }).catch(err=>console.error("Google Fehler:",err));
+ })
+ .then(r=>r.text())
+ .then(t=>console.log("Google Antwort:",t))
+ .catch(err=>console.error("Google Fehler:",err));
 }
 
 loadGroups();
