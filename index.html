@@ -42,6 +42,13 @@ Mindestens eine Gruppe muss komplett ausgefüllt sein.<br>
 Die Resultate gehen direkt in die Access-Ranglisten – bitte die Namen exakt und korrekt erfassen.<br>
 Nach dem Senden dem Mail das Standblatt als Datei oder Bild anhängen.
 </p>
+
+<p>
+<b>App zum Startbildschirm hinzufügen:</b><br>
+📱 <b>iPhone (Safari):</b> Seite öffnen → unten auf „Teilen“-Symbol tippen → „Zum Home-Bildschirm“ → Hinzufügen.<br>
+🤖 <b>Android (Chrome):</b> Seite öffnen → Menü (⋮) → „Zum Startbildschirm hinzufügen“.
+</p>
+
 <p>🔥 Danke für das Melden der Resultate über diese App</p>
 </div>
 
@@ -181,7 +188,6 @@ function isGroupComplete(g){
 }
 
 function submitResult(){
-
  const hasComplete = Object.values(state).some(g => isGroupComplete(g));
  if(!hasComplete){
   alert("Es kann nur gesendet werden, wenn mindestens eine Gruppe vollständig ausgefüllt ist.\nNicht alle Felder sind ausgefüllt.");
