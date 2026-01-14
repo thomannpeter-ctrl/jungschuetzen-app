@@ -39,6 +39,7 @@ pre{white-space:pre-wrap;font-size:.85rem;background:#f1f5f9;padding:1rem;border
 <p>
 Du kannst eine oder zwei Gruppen melden, bei 3er Paarungen alle 3 Gruppen möglich.<br>
 Mindestens eine Gruppe muss komplett ausgefüllt sein.<br>
+Die Resultate gehen direkt in die Access-Ranglisten – bitte die Namen exakt und korrekt erfassen.<br>
 Nach dem Senden dem Mail das Standblatt als Datei oder Bild anhängen.
 </p>
 <p>🔥 Danke für das Melden der Resultate über diese App</p>
@@ -60,7 +61,6 @@ Nach dem Senden dem Mail das Standblatt als Datei oder Bild anhängen.
 <div id="winner" class="winner-none">–</div>
 </div>
 
-<!-- NEUE ANLEITUNG ZWISCHEN SIEGER UND BUTTON -->
 <div class="card">
 <h2>Wichtig</h2>
 <p>
@@ -176,7 +176,18 @@ function calcWinner(){
  winner.innerHTML = html;
 }
 
+function isGroupComplete(g){
+ return g.rows.every(r => r.n && r.y && r.g && r.r);
+}
+
 function submitResult(){
+
+ const hasComplete = Object.values(state).some(g => isGroupComplete(g));
+ if(!hasComplete){
+  alert("Es kann nur gesendet werden, wenn mindestens eine Gruppe vollständig ausgefüllt ist.\nNicht alle Felder sind ausgefüllt.");
+  return;
+ }
+
  let mailText = "JUNGSCHÜTZEN AMTSCUP – RESULTAT\n\n";
  let payload = [];
 
