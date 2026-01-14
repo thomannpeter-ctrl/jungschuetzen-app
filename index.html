@@ -34,7 +34,7 @@ pre{white-space:pre-wrap;font-size:.85rem;background:#f1f5f9;padding:1rem;border
 
 <h1>Jungschützen Amtscup</h1>
 
-<!-- Anleitung oberhalb der Gruppenauswahl -->
+<!-- Anleitung -->
 <div class="card">
 <h2>Anleitung</h2>
 <p>
@@ -98,7 +98,7 @@ function selectGroup(id){
  const name = document.getElementById(id).value;
  if(!name) return;
  if(!state[id]) state[id] = { name, rows:[{},{},{},{}] };
- else state[id].name = name;   // Name aktualisieren, Daten behalten
+ else state[id].name = name;   // Name ändern, Daten behalten
  renderGroups();
 }
 
