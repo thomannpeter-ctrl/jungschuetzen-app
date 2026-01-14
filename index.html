@@ -34,7 +34,6 @@ pre{white-space:pre-wrap;font-size:.85rem;background:#f1f5f9;padding:1rem;border
 
 <h1>Jungschützen Amtscup</h1>
 
-<!-- Anleitung -->
 <div class="card">
 <h2>Anleitung</h2>
 <p>
@@ -59,6 +58,16 @@ Nach dem Senden dem Mail das Standblatt als Datei oder Bild anhängen.
 <div class="card">
 <h2>Sieger</h2>
 <div id="winner" class="winner-none">–</div>
+</div>
+
+<!-- NEUE ANLEITUNG ZWISCHEN SIEGER UND BUTTON -->
+<div class="card">
+<h2>Wichtig</h2>
+<p>
+Nach dem Klicken auf <b>„Resultat übermitteln“</b> wird ein Mail geöffnet.<br>
+Bitte diesem Mail unbedingt das <b>Standblatt als Bild oder Datei anhängen</b>,  
+sonst gilt das Resultat als unvollständig.
+</p>
 </div>
 
 <div class="card">
@@ -98,7 +107,7 @@ function selectGroup(id){
  const name = document.getElementById(id).value;
  if(!name) return;
  if(!state[id]) state[id] = { name, rows:[{},{},{},{}] };
- else state[id].name = name;   // Name ändern, Daten behalten
+ else state[id].name = name;
  renderGroups();
 }
 
@@ -178,19 +187,9 @@ function submitResult(){
   g.rows.forEach((r,i)=>{
    if(r.n || r.r){
     mailText +=
-     (i+1)+"; "+
-     (r.n||"")+"; "+
-     (r.y||"")+"; "+
-     (r.g||"")+"; "+
-     (r.r||"0")+"\n";
+     (i+1)+"; "+(r.n||"")+"; "+(r.y||"")+"; "+(r.g||"")+"; "+(r.r||"0")+"\n";
     payload.push({
-      gruppe:g.name,
-      nr:i+1,
-      name:r.n||"",
-      jahrgang:r.y||"",
-      gender:r.g||"",
-      resultat:r.r||0,
-      gruppenSumme:sum
+      gruppe:g.name,nr:i+1,name:r.n||"",jahrgang:r.y||"",gender:r.g||"",resultat:r.r||0,gruppenSumme:sum
     });
    }
   });
