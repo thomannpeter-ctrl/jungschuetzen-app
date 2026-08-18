@@ -1,16 +1,8 @@
-1 Heim;2;J008;Oberdiessbach SG;Bierfront
-1 Gast;2;J002;Bowil MS;Linde
-1 Gast;2;J006;Konolfingen SG;Fadegrad
-2 Heim;2;J012;Schützen Grosshöchstetten;JS Grosshöchstetten
-2 Gast;2;J011;Oberthal MS;Sabrina
-3 Heim;2;J013;Trimstein Eichi FS;Tagediebe
-3 Gast;2;J017;Worb VSG;Löchli Schützen 1
-4 Heim;2;J004;Konolfingen SG;Hobbits
-4 Gast;2;J010;Oberthal MS;Bösi Buebe
-5 Heim;2;J001;Bowil MS;Groggenmoos
-5 Gast;2;J014;Trimstein Eichi FS;Artemis
-6 Heim;2;J007;Linden FS;Blitzschütze
-6 Gast;2;J005;Konolfingen SG;Rookies
-7 Heim;2;J015;Trimstein Eichi FS;Ares
-7 Gast;2;J003;Falkenfluh-Schützen;Hunters
-
+1 Heim;3;J013;Trimstein Eichi FS;Tagediebe
+1 Gast;3;J001;Bowil MS;Groggenmoos
+2 Heim;3;J002;Bowil MS;Linde
+2 Gast;3;J011;Oberthal MS;Sabrina
+3 Heim;3;J008;Oberdiessbach SG;Bierfront
+3 Gast;3;J010;Oberthal MS;Bösi Buebe
+4 Heim;3;J005;Konolfingen SG;Rookies
+4 Gast;3;J015;Trimstein Eichi FS;Ares
