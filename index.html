@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Jungschützen Amtscup</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
 *{box-sizing:border-box}
 body{font-family:system-ui,sans-serif;background:#eef2f7;margin:0}
@@ -44,6 +45,7 @@ pre{white-space:pre-wrap;font-size:.85rem;background:#f1f5f9;padding:1rem;border
 
 <div class="card">
 <h2>Anleitung</h2>
+
 <p>
 Du kannst eine oder zwei Gruppen melden, bei 3er Paarungen alle 3 Gruppen möglich.<br>
 Mindestens eine Gruppe muss komplett ausgefüllt sein.<br>
@@ -64,10 +66,30 @@ Nach der Erfassung auf <b>„Weiter zum Standblatt“</b> klicken und das Standb
 
 <div class="card">
 <h2>1. Gruppenauswahl</h2>
+
 <div class="row">
- <div class="field"><label>Gruppe 1 *</label><select id="g1"></select></div>
- <div class="field"><label>Gruppe 2</label><select id="g2"></select></div>
- <div class="field"><label>Gruppe 3</label><select id="g3"></select></div>
+
+ <div class="field">
+  <label for="g1">Gruppe 1 *</label>
+  <select id="g1">
+   <option value="">Gruppen werden geladen…</option>
+  </select>
+ </div>
+
+ <div class="field">
+  <label for="g2">Gruppe 2</label>
+  <select id="g2">
+   <option value="">Gruppen werden geladen…</option>
+  </select>
+ </div>
+
+ <div class="field">
+  <label for="g3">Gruppe 3</label>
+  <select id="g3">
+   <option value="">Gruppen werden geladen…</option>
+  </select>
+ </div>
+
 </div>
 </div>
 
@@ -79,7 +101,9 @@ Nach der Erfassung auf <b>„Weiter zum Standblatt“</b> klicken und das Standb
 </div>
 
 <div class="card">
-<button type="button" onclick="goToPhoto()">Weiter zum Standblatt 📷</button>
+<button type="button" onclick="goToPhoto()">
+ Weiter zum Standblatt 📷
+</button>
 </div>
 
 </div>
@@ -94,6 +118,7 @@ Die Resultate sind vollständig. Fotografiere jetzt das Standblatt oder wähle e
 </div>
 
 <label for="standblatt">Standblatt als Bild *</label>
+
 <input
  id="standblatt"
  type="file"
@@ -105,6 +130,7 @@ Die Resultate sind vollständig. Fotografiere jetzt das Standblatt oder wähle e
 </div>
 
 <div class="card">
+
 <button id="sendButton" type="button" onclick="submitResult()">
  Resultat und Standblatt übermitteln
 </button>
@@ -133,32 +159,89 @@ Die Resultate sind vollständig. Fotografiere jetzt das Standblatt oder wähle e
 
 <script>
 const GOOGLE_SCRIPT_URL =
- "https://script.google.com/macros/s/AKfycbwgSEcYU_2Snl2R4oMHfYoSqy6mOL3ZQ4eCn8Qimd_33XlcC4Jskc38sVv7t8XcmeyM/exec;
+ "https://script.google.com/macros/s/AKfycby5pQjmWR8uxzkfLokkQNI03FOM8-G7c4HJ9sq8z6NJm3mMUMsIDp8uarM7-TBdNJCR/exec;
 
 const state = {};
 let formWasSubmitted = false;
+
+/* =========================================================
+   GRUPPEN LADEN
+   ========================================================= */
 
 async function loadGroups(){
  let list = [];
 
  try{
-  const r = await fetch("gruppen.txt?v=" + Date.now());
-  if(!r.ok) throw "Fehlt";
-  list = (await r.text()).split(/\r?\n/).filter(Boolean);
- }catch(e){
-  list = ["Gruppe A","Gruppe B","Gruppe C"];
+  const response = await fetch(
+   "./gruppen.txt?v=" + Date.now(),
+   {cache:"no-store"}
+  );
+
+  if(!response.ok){
+   throw new Error("gruppen.txt wurde nicht gefunden.");
+  }
+
+  const text = await response.text();
+
+  list = text
+   .replace(/^\uFEFF/,"")
+   .split(/\r?\n/)
+   .map(line => line.trim())
+   .filter(line => line !== "");
+
+  if(list.length === 0){
+   throw new Error("gruppen.txt ist leer.");
+  }
+
+ }catch(error){
+  console.error(
+   "Gruppen konnten nicht geladen werden:",
+   error
+  );
+
+  list = [
+   "Gruppe A",
+   "Gruppe B",
+   "Gruppe C"
+  ];
  }
 
  ["g1","g2","g3"].forEach(id=>{
-  const s = document.getElementById(id);
-  s.innerHTML = "<option value=''>Bitte wählen…</option>";
-  list.forEach(g => s.add(new Option(g,g)));
-  s.onchange = () => selectGroup(id);
+  const select = document.getElementById(id);
+
+  select.innerHTML = "";
+
+  const placeholder =
+   document.createElement("option");
+
+  placeholder.value = "";
+  placeholder.textContent = "Bitte wählen…";
+
+  select.appendChild(placeholder);
+
+  list.forEach(groupName=>{
+   const option =
+    document.createElement("option");
+
+   option.value = groupName;
+   option.textContent = groupName;
+
+   select.appendChild(option);
+  });
+
+  select.onchange = ()=>{
+   selectGroup(id);
+  };
  });
 }
 
+/* =========================================================
+   GRUPPENAUSWAHL
+   ========================================================= */
+
 function selectGroup(id){
- const name = document.getElementById(id).value;
+ const select = document.getElementById(id);
+ const name = select.value;
 
  if(!name){
   delete state[id];
@@ -178,21 +261,28 @@ function selectGroup(id){
  renderGroups();
 }
 
+/* =========================================================
+   GRUPPEN UND SCHÜTZEN ANZEIGEN
+   ========================================================= */
+
 function renderGroups(){
- const groupsContainer = document.getElementById("groups");
+ const groupsContainer =
+  document.getElementById("groups");
+
  groupsContainer.innerHTML = "";
 
- ["g1","g2","g3"].forEach((id)=>{
+ ["g1","g2","g3"].forEach(id=>{
   if(!state[id]) return;
 
   const g = state[id];
   const groupNumber = id.replace("g","");
 
-  const c = document.createElement("div");
-  c.className = "card";
+  const card = document.createElement("div");
+  card.className = "card";
 
-  c.innerHTML = `
+  card.innerHTML = `
    <h2>Schützen – Gruppe ${groupNumber}: ${g.name}</h2>
+
    <table>
     <thead>
      <tr>
@@ -203,7 +293,9 @@ function renderGroups(){
       <th>Resultat</th>
      </tr>
     </thead>
+
     <tbody></tbody>
+
     <tfoot>
      <tr>
       <th colspan="4">Summe</th>
@@ -212,13 +304,14 @@ function renderGroups(){
     </tfoot>
    </table>`;
 
-  const tb = c.querySelector("tbody");
+  const tableBody =
+   card.querySelector("tbody");
 
-  g.rows.forEach((r,idx)=>{
-   const tr = document.createElement("tr");
+  g.rows.forEach((r,index)=>{
+   const row = document.createElement("tr");
 
-   tr.innerHTML = `
-    <td>${idx+1}</td>
+   row.innerHTML = `
+    <td>${index+1}</td>
 
     <td class="name">
      <input
@@ -257,122 +350,158 @@ function renderGroups(){
       aria-label="Resultat">
     </td>`;
 
-   const fields = tr.querySelectorAll("input,select");
+   const fields =
+    row.querySelectorAll("input,select");
+
    const nameInput = fields[0];
    const yearInput = fields[1];
    const genderSelect = fields[2];
    const resultInput = fields[3];
 
-   nameInput.oninput = e => {
-    r.n = e.target.value;
+   nameInput.oninput = event=>{
+    r.n = event.target.value;
    };
 
-   yearInput.oninput = e => {
-    e.target.value = e.target.value
+   yearInput.oninput = event=>{
+    const input = event.target;
+
+    input.value = input.value
      .replace(/\D/g,"")
      .slice(0,4);
 
-    r.y = e.target.value;
+    r.y = input.value;
 
     if(/^\d{4}$/.test(r.y)){
-     e.target.classList.remove("invalid");
+     input.classList.remove("invalid");
+     input.setCustomValidity("");
     }
    };
 
-   yearInput.onblur = e => {
-    if(!/^\d{4}$/.test(e.target.value)){
-     e.target.classList.add("invalid");
-     e.target.setCustomValidity(
+   yearInput.onblur = event=>{
+    const input = event.target;
+
+    if(!/^\d{4}$/.test(input.value)){
+     input.classList.add("invalid");
+
+     input.setCustomValidity(
       "Der Jahrgang muss aus genau 4 Ziffern bestehen."
      );
     }else{
-     e.target.classList.remove("invalid");
-     e.target.setCustomValidity("");
+     input.classList.remove("invalid");
+     input.setCustomValidity("");
     }
    };
 
-   genderSelect.onchange = e => {
-    r.g = e.target.value;
+   genderSelect.onchange = event=>{
+    r.g = event.target.value;
    };
 
-   resultInput.oninput = e => {
-    r.r = e.target.value;
-    updateSum(c,g);
+   resultInput.oninput = event=>{
+    r.r = event.target.value;
+    updateSum(card,g);
    };
 
-   tb.appendChild(tr);
+   tableBody.appendChild(row);
   });
 
-  groupsContainer.appendChild(c);
-  updateSum(c,g);
+  groupsContainer.appendChild(card);
+  updateSum(card,g);
  });
 
  calcWinner();
 }
 
+/* =========================================================
+   SUMME UND SIEGER
+   ========================================================= */
+
 function updateSum(card,g){
  card.querySelector(".sum").textContent =
-  g.rows.reduce((a,b)=>a+(Number(b.r)||0),0);
+  g.rows.reduce(
+   (total,row)=>total+(Number(row.r)||0),
+   0
+  );
 
  calcWinner();
 }
 
 function calcWinner(){
- const arr = Object.values(state)
-  .map(g=>({
-   n:g.name,
-   t:g.rows.reduce((a,b)=>a+(Number(b.r)||0),0)
+ const result = Object.values(state)
+  .map(group=>({
+   name:group.name,
+   total:group.rows.reduce(
+    (sum,row)=>sum+(Number(row.r)||0),
+    0
+   )
   }))
-  .filter(x=>x.t>0);
+  .filter(group=>group.total>0);
 
- const winner = document.getElementById("winner");
+ const winner =
+  document.getElementById("winner");
 
- if(arr.length < 2){
+ if(result.length < 2){
   winner.textContent = "–";
   winner.className = "winner-none";
   return;
  }
 
- arr.sort((a,b)=>b.t-a.t);
+ result.sort(
+  (a,b)=>b.total-a.total
+ );
+
  winner.className = "winner-ok";
 
- let html = `🏆 Sieger: ${arr[0].n} (${arr[0].t})<br>`;
+ let html =
+  `🏆 Sieger: ${result[0].name} (${result[0].total})<br>`;
 
- if(arr[1]){
-  html += `🥈 Zweiter: ${arr[1].n} (${arr[1].t})<br>`;
+ if(result[1]){
+  html +=
+   `🥈 Zweiter: ${result[1].name} (${result[1].total})<br>`;
  }
 
- if(arr[2]){
-  html += `🥉 Dritter: ${arr[2].n} (${arr[2].t})`;
+ if(result[2]){
+  html +=
+   `🥉 Dritter: ${result[2].name} (${result[2].total})`;
  }
 
  winner.innerHTML = html;
 }
 
-function isGroupComplete(g){
- return g.rows.every(r =>
-  r.n &&
-  r.n.trim() !== "" &&
-  /^\d{4}$/.test(r.y) &&
-  r.g &&
-  r.r !== undefined &&
-  r.r !== null &&
-  String(r.r).trim() !== ""
+/* =========================================================
+   PRÜFUNG DER EINGABEN
+   ========================================================= */
+
+function isGroupComplete(group){
+ return group.rows.every(row=>
+  row.n &&
+  row.n.trim() !== "" &&
+  /^\d{4}$/.test(row.y) &&
+  row.g &&
+  row.r !== undefined &&
+  row.r !== null &&
+  String(row.r).trim() !== ""
  );
 }
 
 function markInvalidFields(){
- document.querySelectorAll("td.year input").forEach(input=>{
-  if(!/^\d{4}$/.test(input.value)){
-   input.classList.add("invalid");
-  }else{
-   input.classList.remove("invalid");
-  }
- });
+ document
+  .querySelectorAll("td.year input")
+  .forEach(input=>{
+   if(!/^\d{4}$/.test(input.value)){
+    input.classList.add("invalid");
+   }else{
+    input.classList.remove("invalid");
+   }
+  });
 }
 
+/* =========================================================
+   WEITER ZUM STANDBLATT
+   ========================================================= */
+
 function goToPhoto(){
- const selectedGroups = Object.values(state);
+ const selectedGroups =
+  Object.values(state);
 
  if(selectedGroups.length === 0){
   alert("Bitte mindestens eine Gruppe auswählen.");
@@ -381,7 +510,10 @@ function goToPhoto(){
 
  markInvalidFields();
 
- const allComplete = selectedGroups.every(g => isGroupComplete(g));
+ const allComplete =
+  selectedGroups.every(group=>
+   isGroupComplete(group)
+  );
 
  if(!allComplete){
   alert(
@@ -389,9 +521,8 @@ function goToPhoto(){
    "Der Jahrgang muss immer aus genau 4 Ziffern bestehen."
   );
 
-  const firstInvalid = document.querySelector(
-   "input.invalid, td.name input:placeholder-shown"
-  );
+  const firstInvalid =
+   document.querySelector("input.invalid");
 
   if(firstInvalid){
    firstInvalid.focus();
@@ -400,61 +531,100 @@ function goToPhoto(){
   return;
  }
 
- document.getElementById("step1").style.display = "none";
- document.getElementById("step2").style.display = "block";
- window.scrollTo({top:0,behavior:"smooth"});
+ document.getElementById("step1").style.display =
+  "none";
+
+ document.getElementById("step2").style.display =
+  "block";
+
+ window.scrollTo({
+  top:0,
+  behavior:"smooth"
+ });
 }
 
 function backToResults(){
- document.getElementById("step2").style.display = "none";
- document.getElementById("step1").style.display = "block";
- window.scrollTo({top:0,behavior:"smooth"});
+ document.getElementById("step2").style.display =
+  "none";
+
+ document.getElementById("step1").style.display =
+  "block";
+
+ window.scrollTo({
+  top:0,
+  behavior:"smooth"
+ });
 }
 
+/* =========================================================
+   STANDBLATT
+   ========================================================= */
+
 function showSelectedFile(){
- const input = document.getElementById("standblatt");
- const info = document.getElementById("selectedFile");
+ const input =
+  document.getElementById("standblatt");
+
+ const info =
+  document.getElementById("selectedFile");
 
  if(input.files && input.files[0]){
-  info.textContent = "Ausgewähltes Bild: " + input.files[0].name;
+  info.textContent =
+   "Ausgewähltes Bild: " +
+   input.files[0].name;
  }else{
-  info.textContent = "Noch kein Bild ausgewählt.";
+  info.textContent =
+   "Noch kein Bild ausgewählt.";
  }
 }
 
+/* =========================================================
+   MAILTEXT ERSTELLEN
+   ========================================================= */
+
 function createMailText(){
- let mailText = "JUNGSCHÜTZEN AMTSCUP – RESULTAT\n\n";
+ let mailText =
+  "JUNGSCHÜTZEN AMTSCUP – RESULTAT\n\n";
 
  ["g1","g2","g3"].forEach(id=>{
   if(!state[id]) return;
 
-  const g = state[id];
+  const group = state[id];
   const groupNumber = id.replace("g","");
-  const sum = g.rows.reduce(
-   (a,b)=>a+(Number(b.r)||0),
+
+  const sum = group.rows.reduce(
+   (total,row)=>total+(Number(row.r)||0),
    0
   );
 
   mailText +=
-   "GRUPPE " + groupNumber + ": " + g.name + "\n";
+   "GRUPPE " +
+   groupNumber +
+   ": " +
+   group.name +
+   "\n";
 
   mailText +=
    "Nr; Name; Jahrgang; Gender; Resultat\n";
 
-  g.rows.forEach((r,i)=>{
+  group.rows.forEach((row,index)=>{
    mailText +=
-    (i+1) + "; " +
-    r.n + "; " +
-    r.y + "; " +
-    r.g + "; " +
-    r.r + "\n";
+    (index+1) + "; " +
+    row.n + "; " +
+    row.y + "; " +
+    row.g + "; " +
+    row.r + "\n";
   });
 
-  mailText += "Summe: " + sum + "\n\n";
+  mailText +=
+   "Summe: " + sum + "\n\n";
  });
 
  return mailText;
 }
+
+/* =========================================================
+   DATEN FÜR GOOGLE TABELLE
+   ========================================================= */
 
 function createPayload(){
  const payload = [];
@@ -462,22 +632,23 @@ function createPayload(){
  ["g1","g2","g3"].forEach(id=>{
   if(!state[id]) return;
 
-  const g = state[id];
+  const group = state[id];
   const groupNumber = id.replace("g","");
-  const sum = g.rows.reduce(
-   (a,b)=>a+(Number(b.r)||0),
+
+  const sum = group.rows.reduce(
+   (total,row)=>total+(Number(row.r)||0),
    0
   );
 
-  g.rows.forEach((r,i)=>{
+  group.rows.forEach((row,index)=>{
    payload.push({
     gruppeNummer:groupNumber,
-    gruppe:g.name,
-    nr:i+1,
-    name:r.n,
-    jahrgang:r.y,
-    gender:r.g,
-    resultat:r.r,
+    gruppe:group.name,
+    nr:index+1,
+    name:row.n,
+    jahrgang:row.y,
+    gender:row.g,
+    resultat:row.r,
     gruppenSumme:sum
    });
   });
@@ -486,67 +657,102 @@ function createPayload(){
  return payload;
 }
 
+/* =========================================================
+   BILD VERKLEINERN
+   ========================================================= */
+
 function compressImage(file){
  return new Promise((resolve,reject)=>{
   const reader = new FileReader();
 
-  reader.onerror = () => reject(
-   new Error("Das Bild konnte nicht gelesen werden.")
-  );
-
-  reader.onload = () => {
-   const img = new Image();
-
-   img.onerror = () => reject(
-    new Error("Das gewählte Bild ist ungültig.")
+  reader.onerror = ()=>{
+   reject(
+    new Error(
+     "Das Bild konnte nicht gelesen werden."
+    )
    );
+  };
 
-   img.onload = () => {
+  reader.onload = ()=>{
+   const image = new Image();
+
+   image.onerror = ()=>{
+    reject(
+     new Error(
+      "Das gewählte Bild ist ungültig."
+     )
+    );
+   };
+
+   image.onload = ()=>{
     const maxSize = 1800;
-    let width = img.width;
-    let height = img.height;
+
+    let width = image.width;
+    let height = image.height;
 
     if(width > maxSize || height > maxSize){
      const factor = Math.min(
-      maxSize / width,
-      maxSize / height
+      maxSize/width,
+      maxSize/height
      );
 
-     width = Math.round(width * factor);
-     height = Math.round(height * factor);
+     width = Math.round(width*factor);
+     height = Math.round(height*factor);
     }
 
-    const canvas = document.createElement("canvas");
+    const canvas =
+     document.createElement("canvas");
+
     canvas.width = width;
     canvas.height = height;
 
-    const context = canvas.getContext("2d");
-    context.drawImage(img,0,0,width,height);
+    const context =
+     canvas.getContext("2d");
 
-    const dataUrl = canvas.toDataURL("image/jpeg",0.82);
+    context.drawImage(
+     image,
+     0,
+     0,
+     width,
+     height
+    );
+
+    const dataUrl =
+     canvas.toDataURL("image/jpeg",0.82);
 
     resolve({
-     fileName:"Standblatt_" +
-      new Date().toISOString().replace(/[:.]/g,"-") +
+     fileName:
+      "Standblatt_" +
+      new Date()
+       .toISOString()
+       .replace(/[:.]/g,"-") +
       ".jpg",
+
      mimeType:"image/jpeg",
      base64:dataUrl.split(",")[1]
     });
    };
 
-   img.src = reader.result;
+   image.src = reader.result;
   };
 
   reader.readAsDataURL(file);
  });
 }
 
+/* =========================================================
+   RESULTAT ÜBERMITTELN
+   ========================================================= */
+
 async function submitResult(){
- const selectedGroups = Object.values(state);
+ const selectedGroups =
+  Object.values(state);
 
  if(
   selectedGroups.length === 0 ||
-  !selectedGroups.every(g => isGroupComplete(g))
+  !selectedGroups.every(group=>
+   isGroupComplete(group)
+  )
  ){
   alert(
    "Die Resultate sind nicht mehr vollständig. " +
@@ -566,6 +772,7 @@ async function submitResult(){
   alert(
    "Bitte das Standblatt fotografieren oder ein Bild auswählen."
   );
+
   standblattInput.click();
   return;
  }
@@ -582,7 +789,8 @@ async function submitResult(){
   document.getElementById("sendingStatus");
 
  sendButton.disabled = true;
- sendButton.textContent = "Wird übermittelt …";
+ sendButton.textContent =
+  "Wird übermittelt …";
 
  status.style.display = "block";
  status.className = "notice";
@@ -590,12 +798,18 @@ async function submitResult(){
   "Bild wird vorbereitet und Resultat wird übermittelt …";
 
  try{
-  const imageData = await compressImage(standblatt);
-  const mailText = createMailText();
-  const payload = createPayload();
+  const imageData =
+   await compressImage(standblatt);
 
-  document.getElementById("output").textContent =
-   mailText;
+  const mailText =
+   createMailText();
+
+  const payload =
+   createPayload();
+
+  document
+   .getElementById("output")
+   .textContent = mailText;
 
   const completeData = {
    daten:payload,
@@ -604,16 +818,21 @@ async function submitResult(){
    bild:imageData
   };
 
-  const form = document.createElement("form");
+  const form =
+   document.createElement("form");
+
   form.method = "POST";
   form.action = GOOGLE_SCRIPT_URL;
   form.target = "responseFrame";
   form.style.display = "none";
 
-  const input = document.createElement("input");
+  const input =
+   document.createElement("input");
+
   input.type = "hidden";
   input.name = "data";
-  input.value = JSON.stringify(completeData);
+  input.value =
+   JSON.stringify(completeData);
 
   form.appendChild(input);
   document.body.appendChild(form);
@@ -627,14 +846,20 @@ async function submitResult(){
 
  }catch(error){
   sendButton.disabled = false;
+
   sendButton.textContent =
    "Resultat und Standblatt übermitteln";
 
   status.className = "error";
+
   status.textContent =
    "Fehler: " + error.message;
  }
 }
+
+/* =========================================================
+   RÜCKMELDUNG NACH ÜBERMITTLUNG
+   ========================================================= */
 
 document
  .getElementById("responseFrame")
@@ -650,16 +875,24 @@ document
    document.getElementById("sendingStatus");
 
   sendButton.disabled = true;
-  sendButton.textContent = "Erfolgreich übermittelt";
+
+  sendButton.textContent =
+   "Erfolgreich übermittelt";
 
   status.style.display = "block";
   status.className = "success";
+
   status.textContent =
    "✅ Das Resultat wurde in die Google Tabelle eingetragen. " +
    "Die Bestätigung mit dem Standblatt wurde per E-Mail versendet.";
  });
 
-loadGroups();
+/* Seite starten */
+document.addEventListener(
+ "DOMContentLoaded",
+ loadGroups
+);
 </script>
+
 </body>
 </html>
