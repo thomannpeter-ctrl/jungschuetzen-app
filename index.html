@@ -23,7 +23,7 @@ th{background:#dbeafe}
 td.name input{width:100%}
 td.year input{width:82px;text-align:center}
 td.gender select{width:60px}
-td.res input{width:60px;text-align:center}
+td.res input{width:70px;text-align:center}
 button{border:none;border-radius:999px;padding:.9rem;font-size:1rem;cursor:pointer;background:#2563eb;color:white;width:100%}
 button.secondary{background:#64748b;margin-top:.75rem}
 button:disabled{background:#94a3b8;cursor:not-allowed}
@@ -35,6 +35,7 @@ pre{white-space:pre-wrap;font-size:.85rem;background:#f1f5f9;padding:1rem;border
 .error{background:#fee2e2;color:#991b1b;padding:1rem;border-radius:12px;font-weight:700}
 #step2{display:none}
 #sendingStatus{display:none;margin-top:1rem}
+#groupLoadStatus{margin-top:.75rem}
 </style>
 </head>
 
@@ -49,7 +50,7 @@ pre{white-space:pre-wrap;font-size:.85rem;background:#f1f5f9;padding:1rem;border
 <p>
 Du kannst eine oder zwei Gruppen melden, bei 3er Paarungen alle 3 Gruppen möglich.<br>
 Mindestens eine Gruppe muss komplett ausgefüllt sein.<br>
-Die Resultate gehen direkt in die Access-Ranglisten – bitte die Namen exakt und korrekt erfassen.<br>
+Die Resultate gehen direkt in die Access-Ranglisten còmputers? – bitte die Namen exakt und korrekt erfassen.<br>
 Nach der Erfassung auf <b>„Weiter zum Standblatt“</b> klicken und das Standblatt fotografieren.
 </p>
 
@@ -69,27 +70,31 @@ Nach der Erfassung auf <b>„Weiter zum Standblatt“</b> klicken und das Standb
 
 <div class="row">
 
- <div class="field">
-  <label for="g1">Gruppe 1 *</label>
-  <select id="g1">
-   <option value="">Gruppen werden geladen…</option>
-  </select>
- </div>
+<div class="field">
+<label for="g1">Gruppe 1 *</label>
+<select id="g1" disabled>
+<option value="">Gruppen werden geladen…</option>
+</select>
+</div>
 
- <div class="field">
-  <label for="g2">Gruppe 2</label>
-  <select id="g2">
-   <option value="">Gruppen werden geladen…</option>
-  </select>
- </div>
+<div class="field">
+<label for="g2">Gruppe 2</label>
+<select id="g2" disabled>
+<option value="">Gruppen werden geladen…</option>
+</select>
+</div>
 
- <div class="field">
-  <label for="g3">Gruppe 3</label>
-  <select id="g3">
-   <option value="">Gruppen werden geladen…</option>
-  </select>
- </div>
+<div class="field">
+<label for="g3">Gruppe 3</label>
+<select id="g3" disabled>
+<option value="">Gruppen werden geladen…</option>
+</select>
+</div>
 
+</div>
+
+<div id="groupLoadStatus" class="notice">
+Gruppen werden aus gruppen.txt geladen …
 </div>
 </div>
 
@@ -102,7 +107,7 @@ Nach der Erfassung auf <b>„Weiter zum Standblatt“</b> klicken und das Standb
 
 <div class="card">
 <button type="button" onclick="goToPhoto()">
- Weiter zum Standblatt 📷
+Weiter zum Standblatt 📷
 </button>
 </div>
 
@@ -132,11 +137,11 @@ Die Resultate sind vollständig. Fotografiere jetzt das Standblatt oder wähle e
 <div class="card">
 
 <button id="sendButton" type="button" onclick="submitResult()">
- Resultat und Standblatt übermitteln
+Resultat und Standblatt übermitteln
 </button>
 
 <button type="button" class="secondary" onclick="backToResults()">
- Zurück zu den Resultaten
+Zurück zu den Resultaten
 </button>
 
 <div id="sendingStatus"></div>
@@ -159,55 +164,98 @@ Die Resultate sind vollständig. Fotografiere jetzt das Standblatt oder wähle e
 
 <script>
 const GOOGLE_SCRIPT_URL =
- "https://script.google.com/macros/s/AKfycby5pQjmWR8uxzkfLokkQNI03FOM8-G7c4HJ9sq8z6NJm3mMUMsIDp8uarM7-TBdNJCR/exec;
+ "https://script.google.com/macros/s/AKfycby5pQjmWR8uxzkfLokkQNI03FOM8-G7c4HJ9sq8z6NJm3mMUMsIDp8uarM7-TBdNJCR/exec";
 
 const state = {};
+let availableGroups = [];
 let formWasSubmitted = false;
 
-/* =========================================================
-   GRUPPEN LADEN
-   ========================================================= */
+/* Gruppen aus gruppen.txt laden */
 
 async function loadGroups(){
- let list = [];
+ const status =
+  document.getElementById("groupLoadStatus");
 
  try{
+  const fileUrl =
+   new URL("gruppen.txt",window.location.href);
+
+  fileUrl.searchParams.set(
+   "v",
+   Date.now().toString()
+  );
+
   const response = await fetch(
-   "./gruppen.txt?v=" + Date.now(),
+   fileUrl.toString(),
    {cache:"no-store"}
   );
 
   if(!response.ok){
-   throw new Error("gruppen.txt wurde nicht gefunden.");
+   throw new Error(
+    "HTTP-Fehler " + response.status
+   );
   }
 
   const text = await response.text();
 
-  list = text
+  availableGroups = text
    .replace(/^\uFEFF/,"")
    .split(/\r?\n/)
-   .map(line => line.trim())
-   .filter(line => line !== "");
+   .map(line=>line.trim())
+   .filter(line=>line !== "")
+   .map((line,index)=>{
+    const parts = line
+     .split(";")
+     .map(part=>part.trim());
 
-  if(list.length === 0){
-   throw new Error("gruppen.txt ist leer.");
+    if(parts.length < 5){
+     throw new Error(
+      "Zeile " +
+      (index+1) +
+      " hat nicht das richtige Format."
+     );
+    }
+
+    return {
+     paarung:parts[0],
+     anzahl:parts[1],
+     code:parts[2],
+     verein:parts[3],
+     gruppenname:parts.slice(4).join(";")
+    };
+   });
+
+  if(availableGroups.length === 0){
+   throw new Error(
+    "gruppen.txt enthält keine Gruppen."
+   );
   }
 
+  fillGroupSelects();
+
+  status.className = "success";
+  status.textContent =
+   "✅ " +
+   availableGroups.length +
+   " Gruppen erfolgreich geladen.";
+
  }catch(error){
-  console.error(
-   "Gruppen konnten nicht geladen werden:",
-   error
-  );
+  console.error(error);
 
-  list = [
-   "Gruppe A",
-   "Gruppe B",
-   "Gruppe C"
-  ];
+  disableGroupSelects();
+
+  status.className = "error";
+  status.textContent =
+   "❌ Gruppen konnten nicht geladen werden: " +
+   error.message +
+   " Bitte prüfen, ob gruppen.txt im gleichen Ordner wie index.html liegt.";
  }
+}
 
+function fillGroupSelects(){
  ["g1","g2","g3"].forEach(id=>{
-  const select = document.getElementById(id);
+  const select =
+   document.getElementById(id);
 
   select.innerHTML = "";
 
@@ -219,15 +267,26 @@ async function loadGroups(){
 
   select.appendChild(placeholder);
 
-  list.forEach(groupName=>{
+  availableGroups.forEach((group,index)=>{
    const option =
     document.createElement("option");
 
-   option.value = groupName;
-   option.textContent = groupName;
+   option.value = String(index);
+
+   option.textContent =
+    group.code +
+    " – " +
+    group.verein +
+    " – " +
+    group.gruppenname +
+    " (" +
+    group.paarung +
+    ")";
 
    select.appendChild(option);
   });
+
+  select.disabled = false;
 
   select.onchange = ()=>{
    selectGroup(id);
@@ -235,53 +294,102 @@ async function loadGroups(){
  });
 }
 
-/* =========================================================
-   GRUPPENAUSWAHL
-   ========================================================= */
+function disableGroupSelects(){
+ ["g1","g2","g3"].forEach(id=>{
+  const select =
+   document.getElementById(id);
+
+  select.innerHTML =
+   '<option value="">Keine Gruppen verfügbar</option>';
+
+  select.disabled = true;
+ });
+}
+
+/* Gewählte Gruppe übernehmen */
 
 function selectGroup(id){
- const select = document.getElementById(id);
- const name = select.value;
+ const select =
+  document.getElementById(id);
 
- if(!name){
+ const selectedIndex =
+  select.value;
+
+ if(selectedIndex === ""){
   delete state[id];
   renderGroups();
   return;
  }
 
- if(!state[id]){
+ const selected =
+  availableGroups[Number(selectedIndex)];
+
+ if(!selected){
+  alert(
+   "Die gewählte Gruppe konnte nicht gefunden werden."
+  );
+  return;
+ }
+
+ const newName =
+  selected.code +
+  " – " +
+  selected.verein +
+  " – " +
+  selected.gruppenname;
+
+ if(!state[id] || state[id].code !== selected.code){
   state[id] = {
-   name:name,
+   name:newName,
+   paarung:selected.paarung,
+   anzahl:selected.anzahl,
+   code:selected.code,
+   verein:selected.verein,
+   gruppenname:selected.gruppenname,
    rows:[{},{},{},{}]
   };
  }else{
-  state[id].name = name;
+  state[id].name = newName;
+  state[id].paarung = selected.paarung;
+  state[id].anzahl = selected.anzahl;
+  state[id].verein = selected.verein;
+  state[id].gruppenname = selected.gruppenname;
  }
 
  renderGroups();
 }
 
-/* =========================================================
-   GRUPPEN UND SCHÜTZEN ANZEIGEN
-   ========================================================= */
+function escapeHtml(value){
+ return String(value || "")
+  .replace(/&/g,"&amp;")
+  .replace(/</g,"&lt;")
+  .replace(/>/g,"&gt;")
+  .replace(/"/g,"&quot;")
+  .replace(/'/g,"&#039;");
+}
+
+/* Eingabefelder anzeigen */
 
 function renderGroups(){
- const groupsContainer =
+ const container =
   document.getElementById("groups");
 
- groupsContainer.innerHTML = "";
+ container.innerHTML = "";
 
  ["g1","g2","g3"].forEach(id=>{
   if(!state[id]) return;
 
-  const g = state[id];
+  const group = state[id];
   const groupNumber = id.replace("g","");
-
   const card = document.createElement("div");
+
   card.className = "card";
 
   card.innerHTML = `
-   <h2>Schützen – Gruppe ${groupNumber}: ${g.name}</h2>
+   <h2>
+    Schützen – Gruppe ${groupNumber}:
+    ${escapeHtml(group.name)}
+   </h2>
 
    <table>
     <thead>
@@ -307,16 +415,16 @@ function renderGroups(){
   const tableBody =
    card.querySelector("tbody");
 
-  g.rows.forEach((r,index)=>{
-   const row = document.createElement("tr");
+  group.rows.forEach((rowData,index)=>{
+   const tableRow =
+    document.createElement("tr");
 
-   row.innerHTML = `
+   tableRow.innerHTML = `
     <td>${index+1}</td>
 
     <td class="name">
      <input
       type="text"
-      value="${r.n||""}"
       aria-label="Name">
     </td>
 
@@ -329,15 +437,14 @@ function renderGroups(){
       pattern="[0-9]{4}"
       placeholder="JJJJ"
       title="Der Jahrgang muss aus genau 4 Ziffern bestehen."
-      value="${r.y||""}"
       aria-label="Jahrgang">
     </td>
 
     <td class="gender">
      <select aria-label="Gender">
       <option value=""></option>
-      <option value="m" ${r.g==="m"?"selected":""}>m</option>
-      <option value="w" ${r.g==="w"?"selected":""}>w</option>
+      <option value="m">m</option>
+      <option value="w">w</option>
      </select>
     </td>
 
@@ -346,20 +453,24 @@ function renderGroups(){
       type="number"
       inputmode="numeric"
       min="0"
-      value="${r.r||""}"
       aria-label="Resultat">
     </td>`;
 
    const fields =
-    row.querySelectorAll("input,select");
+    tableRow.querySelectorAll("input,select");
 
    const nameInput = fields[0];
    const yearInput = fields[1];
    const genderSelect = fields[2];
    const resultInput = fields[3];
 
+   nameInput.value = rowData.n || "";
+   yearInput.value = rowData.y || "";
+   genderSelect.value = rowData.g || "";
+   resultInput.value = rowData.r || "";
+
    nameInput.oninput = event=>{
-    r.n = event.target.value;
+    rowData.n = event.target.value;
    };
 
    yearInput.oninput = event=>{
@@ -369,9 +480,9 @@ function renderGroups(){
      .replace(/\D/g,"")
      .slice(0,4);
 
-    r.y = input.value;
+    rowData.y = input.value;
 
-    if(/^\d{4}$/.test(r.y)){
+    if(/^\d{4}$/.test(rowData.y)){
      input.classList.remove("invalid");
      input.setCustomValidity("");
     }
@@ -393,31 +504,29 @@ function renderGroups(){
    };
 
    genderSelect.onchange = event=>{
-    r.g = event.target.value;
+    rowData.g = event.target.value;
    };
 
    resultInput.oninput = event=>{
-    r.r = event.target.value;
-    updateSum(card,g);
+    rowData.r = event.target.value;
+    updateSum(card,group);
    };
 
-   tableBody.appendChild(row);
+   tableBody.appendChild(tableRow);
   });
 
-  groupsContainer.appendChild(card);
-  updateSum(card,g);
+  container.appendChild(card);
+  updateSum(card,group);
  });
 
  calcWinner();
 }
 
-/* =========================================================
-   SUMME UND SIEGER
-   ========================================================= */
+/* Summen und Sieger */
 
-function updateSum(card,g){
+function updateSum(card,group){
  card.querySelector(".sum").textContent =
-  g.rows.reduce(
+  group.rows.reduce(
    (total,row)=>total+(Number(row.r)||0),
    0
   );
@@ -452,30 +561,40 @@ function calcWinner(){
  winner.className = "winner-ok";
 
  let html =
-  `🏆 Sieger: ${result[0].name} (${result[0].total})<br>`;
+  "🏆 Sieger: " +
+  escapeHtml(result[0].name) +
+  " (" +
+  result[0].total +
+  ")<br>";
 
  if(result[1]){
   html +=
-   `🥈 Zweiter: ${result[1].name} (${result[1].total})<br>`;
+   "🥈 Zweiter: " +
+   escapeHtml(result[1].name) +
+   " (" +
+   result[1].total +
+   ")<br>";
  }
 
  if(result[2]){
   html +=
-   `🥉 Dritter: ${result[2].name} (${result[2].total})`;
+   "🥉 Dritter: " +
+   escapeHtml(result[2].name) +
+   " (" +
+   result[2].total +
+   ")";
  }
 
  winner.innerHTML = html;
 }
 
-/* =========================================================
-   PRÜFUNG DER EINGABEN
-   ========================================================= */
+/* Prüfung */
 
 function isGroupComplete(group){
  return group.rows.every(row=>
   row.n &&
   row.n.trim() !== "" &&
-  /^\d{4}$/.test(row.y) &&
+  /^\d{4}$/.test(row.y || "") &&
   row.g &&
   row.r !== undefined &&
   row.r !== null &&
@@ -483,7 +602,7 @@ function isGroupComplete(group){
  );
 }
 
-function markInvalidFields(){
+function markInvalidYears(){
  document
   .querySelectorAll("td.year input")
   .forEach(input=>{
@@ -495,20 +614,20 @@ function markInvalidFields(){
   });
 }
 
-/* =========================================================
-   WEITER ZUM STANDBLATT
-   ========================================================= */
+/* Weiter zum Foto */
 
 function goToPhoto(){
  const selectedGroups =
   Object.values(state);
 
  if(selectedGroups.length === 0){
-  alert("Bitte mindestens eine Gruppe auswählen.");
+  alert(
+   "Bitte mindestens eine Gruppe auswählen."
+  );
   return;
  }
 
- markInvalidFields();
+ markInvalidYears();
 
  const allComplete =
   selectedGroups.every(group=>
@@ -518,14 +637,14 @@ function goToPhoto(){
  if(!allComplete){
   alert(
    "Bitte alle Felder der ausgewählten Gruppen vollständig ausfüllen.\n\n" +
-   "Der Jahrgang muss immer aus genau 4 Ziffern bestehen."
+   "Der Jahrgang muss aus genau 4 Ziffern bestehen."
   );
 
-  const firstInvalid =
+  const invalidYear =
    document.querySelector("input.invalid");
 
-  if(firstInvalid){
-   firstInvalid.focus();
+  if(invalidYear){
+   invalidYear.focus();
   }
 
   return;
@@ -556,10 +675,6 @@ function backToResults(){
  });
 }
 
-/* =========================================================
-   STANDBLATT
-   ========================================================= */
-
 function showSelectedFile(){
  const input =
   document.getElementById("standblatt");
@@ -577,9 +692,7 @@ function showSelectedFile(){
  }
 }
 
-/* =========================================================
-   MAILTEXT ERSTELLEN
-   ========================================================= */
+/* Text für die Bestätigungsmail */
 
 function createMailText(){
  let mailText =
@@ -589,7 +702,6 @@ function createMailText(){
   if(!state[id]) return;
 
   const group = state[id];
-  const groupNumber = id.replace("g","");
 
   const sum = group.rows.reduce(
    (total,row)=>total+(Number(row.r)||0),
@@ -597,10 +709,15 @@ function createMailText(){
   );
 
   mailText +=
-   "GRUPPE " +
-   groupNumber +
-   ": " +
-   group.name +
+   "PAARUNG: " + group.paarung + "\n";
+
+  mailText +=
+   "GRUPPE: " +
+   group.code +
+   " – " +
+   group.verein +
+   " – " +
+   group.gruppenname +
    "\n";
 
   mailText +=
@@ -622,9 +739,7 @@ function createMailText(){
  return mailText;
 }
 
-/* =========================================================
-   DATEN FÜR GOOGLE TABELLE
-   ========================================================= */
+/* Daten für Google Tabelle */
 
 function createPayload(){
  const payload = [];
@@ -633,7 +748,6 @@ function createPayload(){
   if(!state[id]) return;
 
   const group = state[id];
-  const groupNumber = id.replace("g","");
 
   const sum = group.rows.reduce(
    (total,row)=>total+(Number(row.r)||0),
@@ -642,7 +756,11 @@ function createPayload(){
 
   group.rows.forEach((row,index)=>{
    payload.push({
-    gruppeNummer:groupNumber,
+    paarung:group.paarung,
+    anzahl:group.anzahl,
+    gruppenCode:group.code,
+    verein:group.verein,
+    gruppenName:group.gruppenname,
     gruppe:group.name,
     nr:index+1,
     name:row.n,
@@ -657,9 +775,7 @@ function createPayload(){
  return payload;
 }
 
-/* =========================================================
-   BILD VERKLEINERN
-   ========================================================= */
+/* Foto verkleinern */
 
 function compressImage(file){
  return new Promise((resolve,reject)=>{
@@ -740,9 +856,7 @@ function compressImage(file){
  });
 }
 
-/* =========================================================
-   RESULTAT ÜBERMITTELN
-   ========================================================= */
+/* Übermitteln */
 
 async function submitResult(){
  const selectedGroups =
@@ -755,7 +869,7 @@ async function submitResult(){
   )
  ){
   alert(
-   "Die Resultate sind nicht mehr vollständig. " +
+   "Die Resultate sind nicht vollständig. " +
    "Bitte zurückgehen und die Eingaben prüfen."
   );
   return;
@@ -778,7 +892,9 @@ async function submitResult(){
  }
 
  if(!standblatt.type.startsWith("image/")){
-  alert("Bitte eine Bilddatei auswählen.");
+  alert(
+   "Bitte eine Bilddatei auswählen."
+  );
   return;
  }
 
@@ -857,9 +973,7 @@ async function submitResult(){
  }
 }
 
-/* =========================================================
-   RÜCKMELDUNG NACH ÜBERMITTLUNG
-   ========================================================= */
+/* Rückmeldung des Google Apps Scripts */
 
 document
  .getElementById("responseFrame")
@@ -875,7 +989,6 @@ document
    document.getElementById("sendingStatus");
 
   sendButton.disabled = true;
-
   sendButton.textContent =
    "Erfolgreich übermittelt";
 
@@ -887,11 +1000,11 @@ document
    "Die Bestätigung mit dem Standblatt wurde per E-Mail versendet.";
  });
 
-/* Seite starten */
-document.addEventListener(
- "DOMContentLoaded",
- loadGroups
-);
+/* Anwendung starten */
+
+window.addEventListener("DOMContentLoaded",()=>{
+ loadGroups();
+});
 </script>
 
 </body>
