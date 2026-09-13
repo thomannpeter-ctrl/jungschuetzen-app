@@ -72,9 +72,12 @@ Nach dem Senden dem Mail das Standblatt als Datei oder Bild anhängen.
 <h2>Wichtig</h2>
 <p>
 Nach dem Klicken auf <b>„Resultat übermitteln“</b> wird ein Mail geöffnet.<br>
-Bitte diesem Mail unbedingt das <b>Standblatt als Bild oder Datei anhängen</b>,  
+Bitte diesem Mail unbedingt das <b>Standblatt als Bild oder Datei anhängen</b>,
 sonst gilt das Resultat als unvollständig.
 </p>
+
+<label for="standblatt">Standblatt als Bild *</label>
+<input id="standblatt" type="file" accept="image/*" required>
 </div>
 
 <div class="card">
@@ -138,7 +141,15 @@ function renderGroups(){
    tr.innerHTML = `
     <td>${idx+1}</td>
     <td class="name"><input value="${r.n||""}"></td>
-    <td class="year"><input value="${r.y||""}"></td>
+    <td class="year">
+      <input
+        type="text"
+        inputmode="numeric"
+        maxlength="4"
+        pattern="[0-9]{4}"
+        placeholder="JJJJ"
+        value="${r.y||""}">
+    </td>
     <td class="gender">
       <select>
         <option value=""></option>
@@ -147,16 +158,30 @@ function renderGroups(){
       </select>
     </td>
     <td class="res"><input value="${r.r||""}"></td>`;
+
    const i = tr.querySelectorAll("input,select");
+
    i[0].oninput = e => r.n = e.target.value;
-   i[1].oninput = e => r.y = e.target.value;
+
+   i[1].oninput = e => {
+    e.target.value = e.target.value.replace(/\D/g,"").slice(0,4);
+    r.y = e.target.value;
+   };
+
    i[2].onchange = e => r.g = e.target.value;
-   i[3].oninput = e => { r.r = e.target.value; updateSum(c,g); };
+
+   i[3].oninput = e => {
+    r.r = e.target.value;
+    updateSum(c,g);
+   };
+
    tb.appendChild(tr);
   });
+
   groups.appendChild(c);
   updateSum(c,g);
  });
+
  calcWinner();
 }
 
@@ -170,27 +195,49 @@ function calcWinner(){
  const arr = Object.values(state)
   .map(g=>({ n:g.name, t:g.rows.reduce((a,b)=>a+(+b.r||0),0) }))
   .filter(x=>x.t>0);
+
  if(arr.length < 2){
   winner.textContent = "–";
   winner.className = "winner-none";
   return;
  }
+
  arr.sort((a,b)=>b.t-a.t);
  winner.className = "winner-ok";
+
  let html = `🏆 Sieger: ${arr[0].n} (${arr[0].t})<br>`;
  if(arr[1]) html += `🥈 Zweiter: ${arr[1].n} (${arr[1].t})<br>`;
  if(arr[2]) html += `🥉 Dritter: ${arr[2].n} (${arr[2].t})`;
+
  winner.innerHTML = html;
 }
 
 function isGroupComplete(g){
- return g.rows.every(r => r.n && r.y && r.g && r.r);
+ return g.rows.every(r =>
+  r.n &&
+  /^\d{4}$/.test(r.y) &&
+  r.g &&
+  r.r
+ );
 }
 
-function submitResult(){
+async function submitResult(){
  const hasComplete = Object.values(state).some(g => isGroupComplete(g));
+
  if(!hasComplete){
-  alert("Es kann nur gesendet werden, wenn mindestens eine Gruppe vollständig ausgefüllt ist.\nNicht alle Felder sind ausgefüllt.");
+  alert(
+   "Es kann nur gesendet werden, wenn mindestens eine Gruppe vollständig ausgefüllt ist.\n" +
+   "Der Jahrgang muss aus genau 4 Ziffern bestehen."
+  );
+  return;
+ }
+
+ const standblattInput = document.getElementById("standblatt");
+ const standblatt = standblattInput.files[0];
+
+ if(!standblatt){
+  alert("Bitte das Standblatt als Bild auswählen.");
+  standblattInput.focus();
   return;
  }
 
@@ -199,35 +246,81 @@ function submitResult(){
 
  Object.values(state).forEach((g,idx)=>{
   const sum = g.rows.reduce((a,b)=>a+(+b.r||0),0);
+
   mailText += "GRUPPE " + (idx+1) + ": " + g.name + "\n";
   mailText += "Nr; Name; Jahrgang; Gender; Resultat\n";
+
   g.rows.forEach((r,i)=>{
    if(r.n || r.r){
     mailText +=
      (i+1)+"; "+(r.n||"")+"; "+(r.y||"")+"; "+(r.g||"")+"; "+(r.r||"0")+"\n";
+
     payload.push({
-      gruppe:g.name,nr:i+1,name:r.n||"",jahrgang:r.y||"",gender:r.g||"",resultat:r.r||0,gruppenSumme:sum
+     gruppe:g.name,
+     nr:i+1,
+     name:r.n||"",
+     jahrgang:r.y||"",
+     gender:r.g||"",
+     resultat:r.r||0,
+     gruppenSumme:sum
     });
    }
   });
+
   mailText += "Summe: " + sum + "\n\n";
  });
 
  document.getElementById("output").textContent = mailText;
 
- window.open(
-  "mailto:"+RESULT_EMAIL+
-  "?subject="+encodeURIComponent("Jungschützen Amtscup Resultat")+
-  "&body="+encodeURIComponent(mailText)
- );
+ let bildGeteilt = false;
+
+ if(
+  navigator.share &&
+  navigator.canShare &&
+  navigator.canShare({files:[standblatt]})
+ ){
+  try{
+   await navigator.share({
+    title:"Jungschützen Amtscup Resultat",
+    text:
+     "Empfänger: " + RESULT_EMAIL + "\n\n" +
+     mailText,
+    files:[standblatt]
+   });
+
+   bildGeteilt = true;
+  }catch(e){
+   if(e.name === "AbortError") return;
+  }
+ }
+
+ if(!bildGeteilt){
+  window.open(
+   "mailto:"+RESULT_EMAIL+
+   "?subject="+encodeURIComponent("Jungschützen Amtscup Resultat")+
+   "&body="+encodeURIComponent(mailText)
+  );
+
+  alert(
+   "Das Mail wurde geöffnet.\n\n" +
+   "Bitte das ausgewählte Standblatt «" +
+   standblatt.name +
+   "» im Mailprogramm manuell anhängen."
+  );
+ }
 
  const form = document.createElement("form");
  form.method="POST";
  form.action=GOOGLE_SCRIPT_URL;
+
  const inp = document.createElement("input");
  inp.type="hidden";
  inp.name="data";
- inp.value=JSON.stringify({ daten: payload, zeit: new Date().toISOString() });
+ inp.value=JSON.stringify({
+  daten:payload,
+  zeit:new Date().toISOString()
+ });
+
  form.appendChild(inp);
  document.body.appendChild(form);
  form.submit();
