@@ -1,138 +1,117 @@
-```html
 <!doctype html>
+
 <html lang="de">
 
 <head>
+
 <meta charset="UTF-8">
+
 <title>Jungschützen Amtscup</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport"
+content="width=device-width, initial-scale=1">
 
 <style>
-* {
-    box-sizing: border-box;
+
+*{box-sizing:border-box}
+
+body{font-family:system-ui,sans-serif;background:#eef2f7;margin:0}
+
+.container{max-width:1200px;margin:auto;padding:1rem}
+
+h1{color:#1e3a8a}
+
+h2{color:#1d4ed8}
+
+.card{background:#fff;border-radius:14px;padding:1rem;margin-bottom:1rem;box-shadow:0
+4px 10px rgba(0,0,0,.08)}
+
+.row{display:flex;gap:.75rem;flex-wrap:wrap}
+
+.field{flex:1;min-width:220px}
+
+label{font-size:.8rem;font-weight:600}
+
+input,select{width:100%;padding:.45rem;border-radius:8px;border:1px
+solid #cbd5f5;font-size:14px}
+
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+
+th,td{border:1px solid
+#e5e7eb;padding:.35rem;text-align:center}
+
+th{background:#dbeafe}
+
+td.name input{width:100%}
+
+td.year input{width:70px;text-align:center}
+
+td.gender select{width:60px}
+
+td.res input{width:60px;text-align:center}
+
+button{border:none;border-radius:999px;padding:.9rem;font-size:1rem;cursor:pointer;background:#2563eb;color:white;width:100%}
+
+button.secondary{background:#64748b}
+
+button:disabled{background:#94a3b8;cursor:not-allowed}
+
+.winner-ok{background:#dcfce7;padding:.7rem;border-radius:12px;font-weight:700}
+
+.winner-none{background:#e5e7eb;padding:.7rem;border-radius:12px}
+
+pre{white-space:pre-wrap;font-size:.85rem;background:#f1f5f9;padding:1rem;border-radius:12px}
+
+.step-hidden{display:none}
+
+.photo-button{
+display:block;
+background:#2563eb;
+color:white;
+padding:1rem;
+border-radius:999px;
+text-align:center;
+font-size:1rem;
+cursor:pointer;
+font-weight:600;
 }
 
-body {
-    font-family: system-ui, sans-serif;
-    background: #eef2f7;
-    margin: 0;
+#standblattInput{display:none}
+
+#photoPreview{
+display:none;
+width:100%;
+max-width:600px;
+margin:1rem auto 0;
+border-radius:12px;
+border:1px solid #cbd5e1;
 }
 
-.container {
-    max-width: 1200px;
-    margin: auto;
-    padding: 1rem;
+.success{
+background:#dcfce7;
+padding:1rem;
+border-radius:12px;
+font-weight:700;
+color:#166534;
 }
 
-h1 {
-    color: #1e3a8a;
+.button-row{
+display:flex;
+gap:.75rem;
 }
 
-h2 {
-    color: #1d4ed8;
+.button-row button{
+flex:1;
 }
 
-.card {
-    background: #fff;
-    border-radius: 14px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 4px 10px rgba(0,0,0,.08);
+@media(max-width:600px){
+.button-row{
+flex-direction:column;
+}
 }
 
-.row {
-    display: flex;
-    gap: .75rem;
-    flex-wrap: wrap;
-}
-
-.field {
-    flex: 1;
-    min-width: 220px;
-}
-
-label {
-    font-size: .8rem;
-    font-weight: 600;
-}
-
-input,
-select {
-    width: 100%;
-    padding: .45rem;
-    border-radius: 8px;
-    border: 1px solid #cbd5f5;
-    font-size: 14px;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: .85rem;
-}
-
-th,
-td {
-    border: 1px solid #e5e7eb;
-    padding: .35rem;
-    text-align: center;
-}
-
-th {
-    background: #dbeafe;
-}
-
-td.name input {
-    width: 100%;
-}
-
-td.year input {
-    width: 75px;
-    text-align: center;
-}
-
-td.gender select {
-    width: 60px;
-}
-
-td.res input {
-    width: 60px;
-    text-align: center;
-}
-
-button {
-    border: none;
-    border-radius: 999px;
-    padding: .9rem;
-    font-size: 1rem;
-    cursor: pointer;
-    background: #2563eb;
-    color: white;
-    width: 100%;
-}
-
-.winner-ok {
-    background: #dcfce7;
-    padding: .7rem;
-    border-radius: 12px;
-    font-weight: 700;
-}
-
-.winner-none {
-    background: #e5e7eb;
-    padding: .7rem;
-    border-radius: 12px;
-}
-
-pre {
-    white-space: pre-wrap;
-    font-size: .85rem;
-    background: #f1f5f9;
-    padding: 1rem;
-    border-radius: 12px;
-}
 </style>
+
 </head>
 
 <body>
@@ -146,34 +125,43 @@ pre {
 <h2>Anleitung</h2>
 
 <p>
+
 Du kannst eine oder zwei Gruppen melden, bei 3er Paarungen
 alle 3 Gruppen möglich.<br>
 
-Mindestens eine Gruppe muss komplett ausgefüllt sein.<br>
+Mindestens eine Gruppe muss komplett ausgefüllt
+sein.<br>
 
 Die Resultate gehen direkt in die Access-Ranglisten – bitte
 die Namen exakt und korrekt erfassen.<br>
 
 Nach dem Senden dem Mail das Standblatt als Datei oder Bild
 anhängen.
+
 </p>
 
 <p>
-<b>App zum Startbildschirm hinzufügen:</b><br>
 
-📱 <b>iPhone (Safari):</b>
-Seite öffnen → unten auf „Teilen“-Symbol tippen →
-„Zum Home-Bildschirm“ → Hinzufügen.<br>
+<b>App zum Startbildschirm
+hinzufügen:</b><br>
 
-🤖 <b>Android (Chrome):</b>
-Seite öffnen → Menü (⋮) →
-„Zum Startbildschirm hinzufügen“.
+📱 <b>iPhone
+(Safari):</b> Seite öffnen → unten auf „Teilen“-Symbol tippen → „Zum
+Home-Bildschirm“ → Hinzufügen.<br>
+
+🤖 <b>Android
+(Chrome):</b> Seite öffnen → Menü (⋮) → „Zum Startbildschirm hinzufügen“.
+
 </p>
 
-<p>🔥 Danke für das Melden der Resultate über diese App</p>
+<p>🔥 Danke für das Melden
+der Resultate über diese App</p>
 
 </div>
 
+
+<!-- SCHRITT 1 -->
+<div id="step1">
 
 <div class="card">
 
@@ -181,65 +169,151 @@ Seite öffnen → Menü (⋮) →
 
 <div class="row">
 
-<div class="field">
-    <label>Gruppe 1 *</label>
-    <select id="g1"></select>
-</div>
+ <div
+class="field"><label>Gruppe 1 *</label><select
+id="g1"></select></div>
 
-<div class="field">
-    <label>Gruppe 2</label>
-    <select id="g2"></select>
-</div>
+ <div
+class="field"><label>Gruppe 2</label><select
+id="g2"></select></div>
 
-<div class="field">
-    <label>Gruppe 3</label>
-    <select id="g3"></select>
-</div>
+ <div
+class="field"><label>Gruppe 3</label><select
+id="g3"></select></div>
 
 </div>
 
 </div>
-
 
 <div id="groups"></div>
-
 
 <div class="card">
 
 <h2>Sieger</h2>
 
-<div id="winner" class="winner-none">–</div>
+<div id="winner"
+class="winner-none">–</div>
 
 </div>
 
+<div class="card">
+
+<button onclick="goToPhoto()">🔵 Weiter zum Standblatt</button>
+
+</div>
+
+</div>
+
+
+<!-- SCHRITT 2 -->
+<div id="step2" class="step-hidden">
+
+<div class="card">
+
+<h2>2. Standblatt fotografieren</h2>
+
+<p>
+Bitte fotografiere jetzt das vollständige Standblatt.<br>
+Achte darauf, dass alle Angaben und Resultate gut lesbar sind.
+</p>
+
+<label class="photo-button" for="standblattInput">
+📷 Standblatt fotografieren
+</label>
+
+<input
+type="file"
+id="standblattInput"
+accept="image/*"
+capture="environment"
+onchange="handlePhoto(event)"
+>
+
+<img id="photoPreview" alt="Standblatt Vorschau">
+
+<p id="photoStatus"></p>
+
+</div>
+
+<div class="card">
+
+<div class="button-row">
+
+<button class="secondary" onclick="backToResult()">
+⬅ Zurück
+</button>
+
+<button onclick="goToSend()">
+Weiter ➡
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- SCHRITT 3 -->
+<div id="step3" class="step-hidden">
+
+<div class="card">
+
+<h2>3. Kontrolle & Senden</h2>
+
+<div id="sendSummary"></div>
+
+</div>
 
 <div class="card">
 
 <h2>Wichtig</h2>
 
 <p>
-Nach dem Klicken auf <b>„Resultat übermitteln“</b>
-wird ein Mail geöffnet.<br>
 
-Bitte diesem Mail unbedingt das <b>Standblatt als Bild oder Datei anhängen</b>,
-sonst gilt das Resultat als unvollständig.
+Mit dem Klicken auf <b>„Resultat jetzt senden“</b> werden das Resultat
+und das fotografierte Standblatt übermittelt.
+
 </p>
 
 </div>
 
-
 <div class="card">
-<button onclick="submitResult()">🔵 Resultat übermitteln</button>
+
+<div class="button-row">
+
+<button class="secondary" onclick="backToPhoto()">
+⬅ Zurück
+</button>
+
+<button id="sendButton" onclick="submitResult()">
+✅ Resultat jetzt senden
+</button>
+
 </div>
 
+</div>
 
 <div class="card">
 
 <h2>Übermitteltes Resultat</h2>
 
-<pre id="output">Noch kein Resultat übermittelt.</pre>
+<pre id="output">Noch kein Resultat
+übermittelt.</pre>
+
+<div id="successMessage"></div>
 
 </div>
+
+</div>
+
+
+<iframe
+id="uploadFrame"
+name="uploadFrame"
+style="display:none"
+onload="uploadFinished()">
+</iframe>
 
 </div>
 
@@ -249,557 +323,603 @@ sonst gilt das Resultat als unvollständig.
 const RESULT_EMAIL = "thomannpeter@bluewin.ch";
 
 const GOOGLE_SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbxxbYk7pwn6JpTkzkX3iVAnqBD2yI-z3aVWkuMWst2DwkxTkAX_WfiFiNTNOMvwZ_z9/exec";
+"https://script.google.com/macros/s/AKfycbzvLid1Kpp2K3UseZtHoFYqWFvHl4cwlFdEW-Asql1d1V-X1DZtLOYk0mw7zXHGQy5j/exec";
 
 const state = {};
 
-async function loadGroups() {
+let standblattFoto = null;
+let sending = false;
+let waitingForUpload = false;
 
-    let list = [];
 
-    try {
+async function loadGroups(){
 
-        const r = await fetch("gruppen.txt?v=" + Date.now());
+ let list = [];
 
-        if (!r.ok) {
-            throw "Fehlt";
-        }
+ try{
 
-        list = (await r.text())
-            .split(/\r?\n/)
-            .filter(Boolean);
+  const r = await
+fetch("gruppen.txt?v=" + Date.now());
 
-    } catch (e) {
+  if(!r.ok) throw
+"Fehlt";
 
-        list = [
-            "Gruppe A",
-            "Gruppe B",
-            "Gruppe C"
-        ];
+  list = (await
+r.text()).split(/\r?\n/).filter(Boolean);
 
-    }
+ }catch(e){
 
-    ["g1", "g2", "g3"].forEach(id => {
+  list = ["Gruppe A","Gruppe B","Gruppe C"];
 
-        const s = document.getElementById(id);
+ }
 
-        s.innerHTML =
-            "<option value=''>Bitte wählen…</option>";
+ ["g1","g2","g3"].forEach(id=>{
 
-        list.forEach(g =>
-            s.add(new Option(g, g))
-        );
+  const s =
+document.getElementById(id);
 
-        s.onchange = () => selectGroup(id);
+  s.innerHTML =
+"<option value=''>Bitte wählen…</option>";
+
+  list.forEach(g =>
+s.add(new Option(g,g)));
+
+  s.onchange = ()
+=> selectGroup(id);
+
+ });
+
+}
+
+
+function selectGroup(id){
+
+ const name =
+document.getElementById(id).value;
+
+ if(!name) return;
+
+ if(!state[id])
+state[id] = { name, rows:[{},{},{},{}] };
+
+ else state[id].name =
+name;
+
+ renderGroups();
+
+}
+
+
+function renderGroups(){
+
+ const groups = document.getElementById("groups");
+
+ groups.innerHTML="";
+
+ Object.keys(state).forEach((id,i)=>{
+
+  const g = state[id];
+
+  const c =
+document.createElement("div");
+
+  c.className="card";
+
+  c.innerHTML = `
+
+   <h2>Schützen
+– Gruppe ${i+1}: ${g.name}</h2>
+
+   <table>
+
+   
+<thead><tr><th>#</th><th>Name</th><th>Jahrgang</th><th>Gender</th><th>Resultat</th></tr></thead>
+
+   
+<tbody></tbody>
+
+   
+<tfoot><tr><th
+colspan="4">Summe</th><th
+class="sum">0</th></tr></tfoot>
+
+   </table>`;
+
+  const tb =
+c.querySelector("tbody");
+
+ 
+g.rows.forEach((r,idx)=>{
+
+   const tr =
+document.createElement("tr");
+
+   tr.innerHTML = `
+
+   
+<td>${idx+1}</td>
+
+    <td
+class="name"><input
+value="${r.n||""}"></td>
+
+    <td
+class="year"><input
+type="text"
+inputmode="numeric"
+pattern="[0-9]{4}"
+maxlength="4"
+placeholder="JJJJ"
+value="${r.y||""}"></td>
+
+    <td
+class="gender">
+
+      <select>
+
+        <option
+value=""></option>
+
+        <option
+value="m"
+${r.g==="m"?"selected":""}>m</option>
+
+        <option
+value="w"
+${r.g==="w"?"selected":""}>w</option>
+
+      </select>
+
+    </td>
+
+    <td
+class="res"><input
+value="${r.r||""}"></td>`;
+
+   const i =
+tr.querySelectorAll("input,select");
+
+   i[0].oninput = e
+=> r.n = e.target.value;
+
+   i[1].oninput = e => {
+
+      let value = e.target.value.replace(/\D/g,"").slice(0,4);
+
+      e.target.value = value;
+
+      r.y = value;
+
+   };
+
+   i[2].onchange = e
+=> r.g = e.target.value;
+
+   i[3].oninput = e
+=> { r.r = e.target.value; updateSum(c,g); };
+
+   tb.appendChild(tr);
+
+  });
+
+ 
+groups.appendChild(c);
+
+  updateSum(c,g);
+
+ });
+
+ calcWinner();
+
+}
+
+
+function updateSum(card,g){
+
+ card.querySelector(".sum").textContent
+=
+
+ 
+g.rows.reduce((a,b)=>a+(+b.r||0),0);
+
+ calcWinner();
+
+}
+
+
+function calcWinner(){
+
+ const winner = document.getElementById("winner");
+
+ const arr =
+Object.values(state)
+
+  .map(g=>({
+n:g.name, t:g.rows.reduce((a,b)=>a+(+b.r||0),0) }))
+
+ 
+.filter(x=>x.t>0);
+
+ if(arr.length <
+2){
+
+  winner.textContent =
+"–";
+
+  winner.className =
+"winner-none";
+
+  return;
+
+ }
+
+ arr.sort((a,b)=>b.t-a.t);
+
+ winner.className =
+"winner-ok";
+
+ let html = `🏆
+Sieger: ${arr[0].n} (${arr[0].t})<br>`;
+
+ if(arr[1]) html += `🥈
+Zweiter: ${arr[1].n} (${arr[1].t})<br>`;
+
+ if(arr[2]) html += `🥉
+Dritter: ${arr[2].n} (${arr[2].t})`;
+
+ winner.innerHTML =
+html;
+
+}
+
+
+function isGroupComplete(g){
+
+ return g.rows.every(r =>
+r.n && /^\d{4}$/.test(r.y || "") && r.g && r.r);
+
+}
+
+
+function validateYears(){
+
+ for(const g of Object.values(state)){
+
+  for(const r of g.rows){
+
+   if(r.y && !/^\d{4}$/.test(r.y)){
+
+    return false;
+
+   }
+
+  }
+
+ }
+
+ return true;
+
+}
+
+
+function goToPhoto(){
+
+ const hasComplete =
+Object.values(state).some(g => isGroupComplete(g));
+
+ if(!validateYears()){
+
+  alert(
+"Der Jahrgang muss genau 4 Ziffern enthalten.\n\nBeispiel: 2008"
+  );
+
+  return;
+
+ }
+
+ if(!hasComplete){
+
+  alert("Es kann nur weitergegangen werden, wenn mindestens eine Gruppe vollständig ausgefüllt ist.\nNicht alle Felder sind ausgefüllt.");
+
+  return;
+
+ }
+
+ document.getElementById("step1").classList.add("step-hidden");
+
+ document.getElementById("step2").classList.remove("step-hidden");
+
+ window.scrollTo(0,0);
+
+}
+
+
+function backToResult(){
+
+ document.getElementById("step2").classList.add("step-hidden");
+
+ document.getElementById("step1").classList.remove("step-hidden");
+
+ window.scrollTo(0,0);
+
+}
+
+
+function backToPhoto(){
+
+ document.getElementById("step3").classList.add("step-hidden");
+
+ document.getElementById("step2").classList.remove("step-hidden");
+
+ window.scrollTo(0,0);
+
+}
+
+
+function handlePhoto(event){
+
+ const file = event.target.files[0];
+
+ if(!file) return;
+
+ const reader = new FileReader();
+
+ reader.onload = function(e){
+
+  const img = new Image();
+
+  img.onload = function(){
+
+   const maxSize = 1600;
+
+   let width = img.width;
+   let height = img.height;
+
+   if(width > height && width > maxSize){
+
+    height = Math.round(height * maxSize / width);
+
+    width = maxSize;
+
+   }else if(height > maxSize){
+
+    width = Math.round(width * maxSize / height);
+
+    height = maxSize;
+
+   }
+
+   const canvas = document.createElement("canvas");
+
+   canvas.width = width;
+   canvas.height = height;
+
+   const ctx = canvas.getContext("2d");
+
+   ctx.drawImage(img,0,0,width,height);
+
+   const dataURL =
+canvas.toDataURL("image/jpeg",0.82);
+
+   standblattFoto = {
+    daten: dataURL.split(",")[1],
+    typ: "image/jpeg",
+    name: "Standblatt.jpg"
+   };
+
+   const preview =
+document.getElementById("photoPreview");
+
+   preview.src = dataURL;
+
+   preview.style.display = "block";
+
+   document.getElementById("photoStatus").innerHTML =
+"✅ Standblatt aufgenommen";
+
+  };
+
+  img.onerror = function(){
+
+   alert("Das Foto konnte nicht verarbeitet werden. Bitte nochmals fotografieren.");
+
+   standblattFoto = null;
+
+  };
+
+  img.src = e.target.result;
+
+ };
+
+ reader.readAsDataURL(file);
+
+}
+
+
+function goToSend(){
+
+ if(!standblattFoto){
+
+  alert("Bitte zuerst das Standblatt fotografieren.");
+
+  return;
+
+ }
+
+ let html = "";
+
+ Object.values(state).forEach((g,idx)=>{
+
+  const sum =
+g.rows.reduce((a,b)=>a+(+b.r||0),0);
+
+  html += "<p><b>Gruppe " + (idx+1) + ":</b> " +
+g.name + "<br><b>Summe:</b> " + sum + "</p>";
+
+ });
+
+ html += "<p><b>Standblatt:</b> ✅ Foto vorhanden</p>";
+
+ document.getElementById("sendSummary").innerHTML = html;
+
+ document.getElementById("step2").classList.add("step-hidden");
+
+ document.getElementById("step3").classList.remove("step-hidden");
+
+ window.scrollTo(0,0);
+
+}
+
+
+function submitResult(){
+
+ if(sending) return;
+
+ const hasComplete =
+Object.values(state).some(g => isGroupComplete(g));
+
+ if(!hasComplete){
+
+  alert("Es kann nur gesendet werden, wenn mindestens eine Gruppe vollständig ausgefüllt ist.\nNicht alle Felder sind ausgefüllt.");
+
+  return;
+
+ }
+
+ if(!validateYears()){
+
+  alert(
+"Der Jahrgang muss genau 4 Ziffern enthalten.\n\nBeispiel: 2008"
+  );
+
+  return;
+
+ }
+
+ if(!standblattFoto){
+
+  alert("Bitte zuerst das Standblatt fotografieren.");
+
+  return;
+
+ }
+
+ let mailText =
+"JUNGSCHÜTZEN AMTSCUP – RESULTAT\n\n";
+
+ let payload = [];
+
+ Object.values(state).forEach((g,idx)=>{
+
+  const sum =
+g.rows.reduce((a,b)=>a+(+b.r||0),0);
+
+  mailText +=
+"GRUPPE " + (idx+1) + ": " + g.name + "\n";
+
+  mailText +=
+"Nr; Name; Jahrgang; Gender; Resultat\n";
+
+ 
+g.rows.forEach((r,i)=>{
+
+   if(r.n || r.r){
+
+    mailText +=
+
+     (i+1)+"; "+(r.n||"")+"; "+(r.y||"")+"; "+(r.g||"")+"; "+(r.r||"0")+"\n";
+
+    payload.push({
+
+      gruppe:g.name,
+      nr:i+1,
+      name:r.n||"",
+      jahrgang:r.y||"",
+      gender:r.g||"",
+      resultat:r.r||0,
+      gruppenSumme:sum
 
     });
-}
 
+   }
 
-function selectGroup(id) {
+  });
 
-    const name =
-        document.getElementById(id).value;
+  mailText +=
+"Summe: " + sum + "\n\n";
 
-    if (!name) {
-        return;
-    }
+ });
 
-    if (!state[id]) {
+ document.getElementById("output").textContent
+= mailText;
 
-        state[id] = {
-            name,
-            rows: [
-                {},
-                {},
-                {},
-                {}
-            ]
-        };
+ sending = true;
+ waitingForUpload = true;
 
-    } else {
+ const sendButton =
+document.getElementById("sendButton");
 
-        state[id].name = name;
+ sendButton.disabled = true;
+ sendButton.textContent = "⏳ Resultat wird gesendet…";
 
-    }
+ const form =
+document.createElement("form");
 
-    renderGroups();
-}
+ form.method="POST";
 
+ form.action=GOOGLE_SCRIPT_URL;
 
-function renderGroups() {
+ form.target="uploadFrame";
 
-    const groupsContainer =
-        document.getElementById("groups");
+ form.style.display="none";
 
-    groupsContainer.innerHTML = "";
+ const inp =
+document.createElement("input");
 
-    Object.keys(state).forEach((id, i) => {
+ inp.type="hidden";
 
-        const g = state[id];
+ inp.name="data";
 
-        const c =
-            document.createElement("div");
+ inp.value=JSON.stringify({
+  daten: payload,
+  zeit: new Date().toISOString(),
+  foto: standblattFoto
+ });
 
-        c.className = "card";
+ form.appendChild(inp);
 
-        c.innerHTML = `
-            <h2>Schützen – Gruppe ${i + 1}: ${g.name}</h2>
+ document.body.appendChild(form);
 
-            <table>
+ form.submit();
 
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Jahrgang</th>
-                        <th>Gender</th>
-                        <th>Resultat</th>
-                    </tr>
-                </thead>
+ setTimeout(function(){
 
-                <tbody></tbody>
+  if(form.parentNode){
+   form.parentNode.removeChild(form);
+  }
 
-                <tfoot>
-                    <tr>
-                        <th colspan="4">Summe</th>
-                        <th class="sum">0</th>
-                    </tr>
-                </tfoot>
-
-            </table>
-        `;
-
-        const tb =
-            c.querySelector("tbody");
-
-        g.rows.forEach((r, idx) => {
-
-            const tr =
-                document.createElement("tr");
-
-            tr.innerHTML = `
-
-                <td>${idx + 1}</td>
-
-                <td class="name">
-                    <input
-                        type="text"
-                        value="${r.n || ""}"
-                        autocomplete="off">
-                </td>
-
-                <td class="year">
-                    <input
-                        type="text"
-                        inputmode="numeric"
-                        pattern="[0-9]{4}"
-                        maxlength="4"
-                        placeholder="JJJJ"
-                        title="Bitte den Jahrgang mit genau 4 Ziffern eingeben, z. B. 2008"
-                        value="${r.y || ""}"
-                        autocomplete="off">
-                </td>
-
-                <td class="gender">
-
-                    <select>
-
-                        <option value=""></option>
-
-                        <option
-                            value="m"
-                            ${r.g === "m" ? "selected" : ""}>
-                            m
-                        </option>
-
-                        <option
-                            value="w"
-                            ${r.g === "w" ? "selected" : ""}>
-                            w
-                        </option>
-
-                    </select>
-
-                </td>
-
-                <td class="res">
-
-                    <input
-                        type="text"
-                        inputmode="numeric"
-                        value="${r.r || ""}">
-
-                </td>
-            `;
-
-            const inputs =
-                tr.querySelectorAll("input,select");
-
-
-            /*
-             * NAME
-             */
-            inputs[0].oninput = e => {
-
-                r.n = e.target.value;
-
-            };
-
-
-            /*
-             * JAHRGANG
-             *
-             * Nur Ziffern erlaubt.
-             * Maximal 4 Stellen.
-             */
-            inputs[1].oninput = e => {
-
-                let value = e.target.value;
-
-                // Alles ausser Zahlen entfernen
-                value = value.replace(/\D/g, "");
-
-                // Maximal 4 Stellen
-                value = value.slice(0, 4);
-
-                e.target.value = value;
-
-                r.y = value;
-
-            };
-
-
-            /*
-             * GENDER
-             */
-            inputs[2].onchange = e => {
-
-                r.g = e.target.value;
-
-            };
-
-
-            /*
-             * RESULTAT
-             */
-            inputs[3].oninput = e => {
-
-                r.r = e.target.value;
-
-                updateSum(c, g);
-
-            };
-
-
-            tb.appendChild(tr);
-
-        });
-
-
-        groupsContainer.appendChild(c);
-
-        updateSum(c, g);
-
-    });
-
-    calcWinner();
+ },5000);
 
 }
 
 
-function updateSum(card, g) {
+function uploadFinished(){
 
-    card.querySelector(".sum").textContent =
-        g.rows.reduce(
-            (a, b) => a + (+b.r || 0),
-            0
-        );
+ if(!waitingForUpload) return;
 
-    calcWinner();
+ waitingForUpload = false;
 
-}
+ const sendButton =
+document.getElementById("sendButton");
 
+ sendButton.disabled = true;
 
-function calcWinner() {
+ sendButton.textContent = "✅ Resultat gesendet";
 
-    const winner =
-        document.getElementById("winner");
+ document.getElementById("successMessage").innerHTML =
+'<div class="success">✅ Resultat erfolgreich übermittelt.<br>Resultat und Standblatt wurden gesendet.</div>';
 
-    const arr =
-        Object.values(state)
-
-        .map(g => ({
-            n: g.name,
-            t: g.rows.reduce(
-                (a, b) => a + (+b.r || 0),
-                0
-            )
-        }))
-
-        .filter(x => x.t > 0);
-
-
-    if (arr.length < 2) {
-
-        winner.textContent = "–";
-
-        winner.className =
-            "winner-none";
-
-        return;
-
-    }
-
-
-    arr.sort((a, b) =>
-        b.t - a.t
-    );
-
-
-    winner.className =
-        "winner-ok";
-
-
-    let html =
-        `🏆 Sieger: ${arr[0].n} (${arr[0].t})<br>`;
-
-
-    if (arr[1]) {
-
-        html +=
-            `🥈 Zweiter: ${arr[1].n} (${arr[1].t})<br>`;
-
-    }
-
-
-    if (arr[2]) {
-
-        html +=
-            `🥉 Dritter: ${arr[2].n} (${arr[2].t})`;
-
-    }
-
-
-    winner.innerHTML = html;
-
-}
-
-
-/*
- * Gruppe vollständig?
- *
- * Der Jahrgang muss GENAU 4 Ziffern enthalten.
- */
-function isGroupComplete(g) {
-
-    return g.rows.every(r =>
-
-        r.n &&
-        /^\d{4}$/.test(r.y || "") &&
-        r.g &&
-        r.r
-
-    );
-
-}
-
-
-/*
- * Prüft zusätzlich alle bereits ausgefüllten
- * Jahrgangsfelder.
- */
-function validateYears() {
-
-    for (const g of Object.values(state)) {
-
-        for (const r of g.rows) {
-
-            if (
-                r.y &&
-                !/^\d{4}$/.test(r.y)
-            ) {
-
-                return false;
-
-            }
-
-        }
-
-    }
-
-    return true;
-
-}
-
-
-function submitResult() {
-
-    /*
-     * Zuerst Jahrgänge kontrollieren
-     */
-    if (!validateYears()) {
-
-        alert(
-            "Der Jahrgang muss genau 4 Ziffern enthalten.\n\n" +
-            "Beispiel: 2008"
-        );
-
-        return;
-
-    }
-
-
-    /*
-     * Mindestens eine Gruppe muss vollständig sein
-     */
-    const hasComplete =
-        Object.values(state)
-            .some(g => isGroupComplete(g));
-
-
-    if (!hasComplete) {
-
-        alert(
-            "Es kann nur gesendet werden, wenn mindestens eine Gruppe vollständig ausgefüllt ist.\n\n" +
-            "Bitte kontrolliere Name, Jahrgang (JJJJ), Gender und Resultat."
-        );
-
-        return;
-
-    }
-
-
-    let mailText =
-        "JUNGSCHÜTZEN AMTSCUP – RESULTAT\n\n";
-
-    let payload = [];
-
-
-    Object.values(state).forEach((g, idx) => {
-
-        const sum =
-            g.rows.reduce(
-                (a, b) => a + (+b.r || 0),
-                0
-            );
-
-
-        mailText +=
-            "GRUPPE " +
-            (idx + 1) +
-            ": " +
-            g.name +
-            "\n";
-
-
-        mailText +=
-            "Nr; Name; Jahrgang; Gender; Resultat\n";
-
-
-        g.rows.forEach((r, i) => {
-
-            if (r.n || r.r) {
-
-                mailText +=
-                    (i + 1) + "; " +
-                    (r.n || "") + "; " +
-                    (r.y || "") + "; " +
-                    (r.g || "") + "; " +
-                    (r.r || "0") +
-                    "\n";
-
-
-                payload.push({
-
-                    gruppe: g.name,
-
-                    nr: i + 1,
-
-                    name: r.n || "",
-
-                    jahrgang: r.y || "",
-
-                    gender: r.g || "",
-
-                    resultat: r.r || 0,
-
-                    gruppenSumme: sum
-
-                });
-
-            }
-
-        });
-
-
-        mailText +=
-            "Summe: " +
-            sum +
-            "\n\n";
-
-    });
-
-
-    document
-        .getElementById("output")
-        .textContent = mailText;
-
-
-    /*
-     * Mail öffnen
-     */
-    window.open(
-
-        "mailto:" +
-        RESULT_EMAIL +
-
-        "?subject=" +
-        encodeURIComponent(
-            "Jungschützen Amtscup Resultat"
-        ) +
-
-        "&body=" +
-        encodeURIComponent(mailText)
-
-    );
-
-
-    /*
-     * Daten an Google Script übertragen
-     */
-    const form =
-        document.createElement("form");
-
-    form.method = "POST";
-
-    form.action =
-        GOOGLE_SCRIPT_URL;
-
-
-    const inp =
-        document.createElement("input");
-
-    inp.type = "hidden";
-
-    inp.name = "data";
-
-    inp.value =
-        JSON.stringify({
-
-            daten: payload,
-
-            zeit:
-                new Date().toISOString()
-
-        });
-
-
-    form.appendChild(inp);
-
-    document.body.appendChild(form);
-
-    form.submit();
+ sending = false;
 
 }
 
@@ -809,5 +929,5 @@ loadGroups();
 </script>
 
 </body>
+
 </html>
-```
